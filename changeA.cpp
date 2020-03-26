@@ -41,12 +41,19 @@ int main()
 		}
 	}		
 	fclose(r);
+    for (int i = 0; i < N; ++i)
+	{
+		for (int j = N-1; j > i; --j)
+		{
+			A(i,j)=A(j,i);
+		}
+	}
 
 	FILE *t= fopen("Thinness.txt", "w");
     for (int i = 0; i < N; ++i)
 	{
 		thinness=0;
-		for (int j = 0; j <= i; ++j)
+		for (int j = 0; j < N; ++j)
 		{
 			if(i==j)
 			{
