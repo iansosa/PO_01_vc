@@ -14,12 +14,89 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void fillG(std::vector<double> &G,int N)
+{
+
+		FILE *r= fopen("Gi.txt", "r");
+		for (int i = 0; i < N; ++i)
+		{
+			fscanf(r, "%lf", &G[i]);
+		}
+		fclose(r);
+}
+
+void capas(int N,arma::Mat<double> &A,std::vector<double> &G)
+{
+	std::vector<int> capes(N,-1);
+	capes[0]=0;
+	int Ntotal=1;
+	int Ncapas=0;
+
+	FILE *w= fopen("capas.txt", "w");
+	fprintf(w, "%d\n", 0);
+		for (int j = 0; j < N; ++j) //capas
+		{
+			if(Ntotal==N)
+			{
+				break;
+			}
+			for (int i = 0; i < N; ++i) //
+			{
+				if(capes[i]==j)
+				{
+					for (int k = 0; k < N; ++k)
+					{
+						if(A(i,k)>0 && capes[k]<0)
+						{
+							fprintf(w, "%d   ",k);
+							capes[k]=j+1;
+							Ntotal=Ntotal+1;
+						}
+					}
+				}
+
+			}
+			fprintf(w, "\n" );
+		}
+	printf("%d=%d\n", Ntotal,N );
+
+	for (int i = 0; i < N; ++i)
+	{
+		if(Ncapas<capes[i])
+		{
+			Ncapas=capes[i];
+		}
+	}
+
+	double median=0;
+	int Cnumber=0;
+	for (int i = 0; i < Ncapas; ++i)
+	{
+		median=0;
+		Cnumber=0;
+
+		for (int j = 0; j < N; ++j)
+		{
+			if(capes[j]==i)
+			{
+				median=median+G[j];
+				Cnumber=Cnumber+1;
+			}
+		}
+		printf("Capa %d  <G>=%lf\n",i,median/Cnumber );
+		printf("Capa %d  N=%d\n",i, Cnumber );
+	}
+}
+
+
 int main()
 {
     int N;
     printf("N: ");
     std::cin >>N;
     arma::Mat<double> A(N,N);
+    std::vector<double> G(N);
+	fillG(G,N);
 
     double kappa;
     printf("Kappa: ");
@@ -78,6 +155,7 @@ int main()
 		}
 	}
 	fclose(w);
+	capas(N,A,G);
 
 ////////////////////////////////////////////////////////////////////////////
 
