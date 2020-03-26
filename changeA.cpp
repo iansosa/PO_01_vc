@@ -29,6 +29,8 @@ int main()
     printf("K: ");
     std::cin >>K;
 
+    int thinness=0;
+
 ////////////////////////////////////////////////////////////////////////////
     FILE *r= fopen("Ai.txt", "r");
     for (int i = 0; i < N; ++i)
@@ -40,8 +42,10 @@ int main()
 	}		
 	fclose(r);
 
+	FILE *t= fopen("Thinness.txt", "w");
     for (int i = 0; i < N; ++i)
 	{
+		thinness=0;
 		for (int j = 0; j <= i; ++j)
 		{
 			if(i==j)
@@ -51,9 +55,12 @@ int main()
 			if(i != j && A(i,j)>0)
 			{
 				A(i,j)=K;
+				thinness=thinness+1;
 			}
 		}
+		fprintf(t, "%d \n ",thinness);
 	}
+	fclose(t);
 
     FILE *w= fopen("Ai.txt", "w");
     for (int i = 0; i < N; ++i)
