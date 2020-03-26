@@ -70,7 +70,7 @@ void capas(int N,arma::Mat<double> &A,std::vector<double> &G)
 
 	double median=0;
 	int Cnumber=0;
-	for (int i = 0; i < Ncapas; ++i)
+	for (int i = 0; i <= Ncapas; ++i)
 	{
 		median=0;
 		Cnumber=0;
