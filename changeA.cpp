@@ -119,8 +119,7 @@ int main()
     int thinness=0;
 
 ////////////////////////////////////////////////////////////////////////////
-    if(test!=1)
-    {
+
     FILE *r= fopen("Ai.txt", "r");
     for (int i = 0; i < N; ++i)
 	{
@@ -137,7 +136,8 @@ int main()
 			A(i,j)=A(j,i);
 		}
 	}
-
+    if(test!=1)
+    {
 	FILE *t= fopen("Thinness.txt", "w");
     for (int i = 0; i < N; ++i)
 	{
