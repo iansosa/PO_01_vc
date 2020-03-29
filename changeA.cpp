@@ -94,21 +94,33 @@ int main()
     int N;
     printf("N: ");
     std::cin >>N;
+    int test;
+    printf("Test? (1 YES): ");
+    std::cin >>test;
+
     arma::Mat<double> A(N,N);
     std::vector<double> G(N);
 	fillG(G,N);
 
     double kappa;
+    double K;
+	if(test!=1)
+	{
+
     printf("Kappa: ");
     std::cin >>kappa;
 
-    double K;
+
     printf("K: ");
     std::cin >>K;
+	}
+
 
     int thinness=0;
 
 ////////////////////////////////////////////////////////////////////////////
+    if(test!=1)
+    {
     FILE *r= fopen("Ai.txt", "r");
     for (int i = 0; i < N; ++i)
 	{
@@ -155,6 +167,8 @@ int main()
 		}
 	}
 	fclose(w);
+    }
+
 	capas(N,A,G);
 
 ////////////////////////////////////////////////////////////////////////////
