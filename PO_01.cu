@@ -10,6 +10,7 @@
 #include <utility>
 #include <omp.h>
 #include <boost/numeric/odeint.hpp>
+#include <boost/numeric/odeint/external/openmp/openmp.hpp>
 #include <boost/random.hpp>
 
 typedef std::vector< double > state_type;
@@ -87,6 +88,7 @@ class harm_osc
     	{
     		printf("tiempo: %lf\n",t);
     	}
+        #pragma omp parallel for schedule(runtime) private(sum)
         for (int i = 0; i < m_N; ++i)
         {
         	sum=0;
@@ -602,8 +604,8 @@ void printstuff(arma::Mat<double> A,size_t steps, std::vector< state_type > &x_v
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	#pragma omp parallel
-	#pragma omp for
+	/*#pragma omp parallel
+	#pragma omp for*/
 	for( size_t i=0; i<steps; ++i )
 	{
 		if(i>=0 && i<steps/4)
@@ -661,8 +663,8 @@ void printsave(size_t steps, std::vector< state_type > &x_vec,std::vector<double
 	FILE *f3=fopen("save_3.txt","w");
 	FILE *f4=fopen("save_4.txt","w");
 
-	#pragma omp parallel
-	#pragma omp for
+	/*#pragma omp parallel
+	#pragma omp for*/
 	for( size_t i=0; i<steps; ++i )
 	{
 		if(i>=0 && i<steps/4)
@@ -763,7 +765,13 @@ int main()
 	inicialcond(x,N,rng,load);
 ////////////////////////////////////////////////////////////////////////////
     harm_osc ho(K,N,I,A,F,G,Fw);
-    runge_kutta4 < state_type > stepper;
+    runge_kutta4<
+                      state_type , double ,
+                      state_type , double ,
+                      openmp_range_algebra
+                    > stepper;
+    int chunk_size = N/omp_get_max_threads();
+    omp_set_schedule( omp_sched_static , chunk_size );
     printf("solving..\n");
 	size_t steps = integrate_adaptive(stepper, ho, x , 0.0 , 500.0 , 0.01,push_back_state_and_time( x_vec , times )); //1 funcion. 2 condiciones iniciales. 3 tiempo inicial. 4 tiempo final. 5 dt inicial. 6 vector de posicion y tiempo
 ////////////////////////////////////////////////////////////////////////////////
