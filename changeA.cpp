@@ -14,6 +14,33 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+double mediann(int N,arma::Mat<double> &A,int j,std::vector<int> &capes)
+{
+	double medi=0;
+	double meditotal=0;
+	int cap=0;
+	for (int i = 0; i < N; ++i)
+	{
+		medi=0;
+		if(capes[i]==j)
+		{
+			//printf("%d    %d\n",i,j );
+			cap=cap+1;
+			for (int k = 0; k < N; ++k)
+			{
+				if(A(i,k)>0 && i!=k)
+				{
+					medi=medi+1;
+				}
+			}
+
+		}
+		meditotal=meditotal+medi;
+	}
+	meditotal=meditotal/cap;
+	return(meditotal);
+}
+
 void fillG(std::vector<double> &G,int N)
 {
 
@@ -85,6 +112,7 @@ void capas(int N,arma::Mat<double> &A,std::vector<double> &G)
 		}
 		printf("Capa %d  <G>=%lf\n",i,median/Cnumber );
 		printf("Capa %d  N=%d\n",i, Cnumber );
+		printf("Capa %d  <N>=%lf\n",i, mediann(N,A,i,capes) );
 	}
 }
 
