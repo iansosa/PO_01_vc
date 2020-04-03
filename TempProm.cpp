@@ -43,6 +43,53 @@ double Te1_up_1b(double K,double r_up,double r_down,double gamma_up,double gamma
 
 }
 
+double Tomega_up_1b(double K,double r_up,double r_down,double gamma_up,double gamma_down,int N,double x)
+{
+    double A_up=Aup_1b(K,r_up,r_down,gamma_up,gamma_down,N);
+    double c=c_1b(K,r_up,gamma_down);
+    double A_down=Adown_1b(K,r_up,r_down,gamma_up,gamma_down,N);
+
+    double multiconst=A_up*A_up*0.5;
+    double term1=-c*c*gamma_down*(r_down/r_up);
+    double term2=(x-gamma_up)*(1.0/(pow(K*r_up-1,2)+pow(x,2)))*(K*r_up*(K*r_up-1)+c*c*(r_down/r_up)*(pow(K*r_up-1,2)+x*gamma_down)-r_down*K*(K*r_up-1));
+    return(multiconst*(term1+term2));
+}
+
+double Tomega_down_1b(double K,double r_up,double r_down,double gamma_up,double gamma_down,int N,double x)
+{
+    double A_up=Aup_1b(K,r_up,r_down,gamma_up,gamma_down,N);
+    double c=c_1b(K,r_up,gamma_down);
+    double A_down=Adown_1b(K,r_up,r_down,gamma_up,gamma_down,N);
+
+    double multiconst=A_down*A_down*0.5;
+    double term1=gamma_down;
+    double term2=(x-gamma_down)*(1.0/(pow(K*r_down-1,2)+pow(x,2)))*(K*r_down*(K*r_down-1)+(K*r_down-1)*(K*r_up-1)-x*gamma_down-r_up*K*(K*r_down-1));
+    return(multiconst*(term1+term2));
+}
+
+double Tgamma_up_1b(double K,double r_up,double r_down,double gamma_up,double gamma_down,int N,double x)
+{
+    double A_up=Aup_1b(K,r_up,r_down,gamma_up,gamma_down,N);
+    double c=c_1b(K,r_up,gamma_down);
+    double A_down=Adown_1b(K,r_up,r_down,gamma_up,gamma_down,N);
+
+    double multiconst=-x*A_up*A_up*0.5;
+    double term1=1.0;
+    double term2=-(x-gamma_up)*(1.0/(pow(K*r_up-1,2)+pow(x,2)))*(x+gamma_up);
+    return(multiconst*(term1+term2));
+}
+
+double Tgamma_down_1b(double K,double r_up,double r_down,double gamma_up,double gamma_down,int N,double x)
+{
+    double A_up=Aup_1b(K,r_up,r_down,gamma_up,gamma_down,N);
+    double c=c_1b(K,r_up,gamma_down);
+    double A_down=Adown_1b(K,r_up,r_down,gamma_up,gamma_down,N);
+
+    double multiconst=-x*A_down*A_down*0.5;
+    double term1=1.0;
+    double term2=-(x-gamma_down)*(1.0/(pow(K*r_down-1,2)+pow(x,2)))*(x+gamma_down);
+    return(multiconst*(term1+term2));
+}
 
 void fillG(std::vector<double> &G,int N)
 {
@@ -141,7 +188,7 @@ void prinstuff_1b(int N,std::vector<double> &G,arma::Mat<double> &A,std::vector<
 
 	for (int i = 1; i < N; ++i)
 	{
-		fprintf(f0,"%.15lf   %.15lf   %.15lf   %.15lf	  %.15lf    %.15lf   \n",G[i]/I[i],A(i,0)/I[i],e1[i],eomega[i],egamma[i],Te1_up_1b(K,r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]));
+		fprintf(f0,"%.15lf   %.15lf   %.15lf   %.15lf	  %.15lf    %.15lf    %.15lf    %.15lf    %.15lf    %.15lf    %.15lf   \n",G[i]/I[i],A(i,0)/I[i],e1[i],eomega[i],egamma[i],Te1_up_1b(K,r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]),0.0,Tomega_up_1b(K,r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]),Tomega_down_1b(K,r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]),Tgamma_up_1b(K,r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]),Tgamma_down_1b(K,r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]));
         //fprintf(f0, " \n" );
 	}
 	fclose(f0);
