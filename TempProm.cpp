@@ -14,6 +14,48 @@
 
 typedef std::vector< double > state_type;
 
+double Te1_up_1a(double r_up,double r_down,double gamma_up,double gamma_down,int N,double x)
+{
+    double multiconst=1.0;
+    double term1=(r_down/r_up)*gamma_down;
+    double term2=gamma_up;
+    return(multiconst*(term1+term2));
+}
+
+double Tgamma_up_1a(double r_up,double r_down,double gamma_up,double gamma_down,int N,double x)
+{
+
+    double multiconst=1.0;
+    double term1=-x;
+    double term2=0.0;
+    return(multiconst*(term1+term2));
+}
+
+double Tgamma_down_1a(double r_up,double r_down,double gamma_up,double gamma_down,int N,double x)
+{
+    double multiconst=1.0;
+    double term1=-x;
+    double term2=0.0;
+    return(multiconst*(term1+term2));
+}
+
+double Tomega_up_1a(double r_up,double r_down,double gamma_up,double gamma_down,int N,double x)
+{
+    double multiconst=1.0;
+    double term1=x;
+    double term2=-(r_down/r_up)*gamma_down-gamma_up;
+    return(multiconst*(term1+term2));
+}
+
+double Tomega_down_1a(double r_up,double r_down,double gamma_up,double gamma_down,int N,double x)
+{
+    double multiconst=1.0;
+    double term1=x;
+    double term2=0.0;
+    return(multiconst*(term1+term2));
+}
+
+
 double c_1b(double K, double r_up, double gamma_down)
 {
     return(K*r_up/(sqrt(pow(K*r_up-1,2)+pow(gamma_down,2))));
@@ -40,7 +82,6 @@ double Te1_up_1b(double K,double r_up,double r_down,double gamma_up,double gamma
     double term1=gamma_up+(r_down/r_up)*gamma_down*c*c;
     double term2=(x-gamma_up)*(1.0/(pow(K*r_up-1,2)+pow(x,2)))*((K*r_down-1-c*c*(r_down/r_up)*(K*r_up-1))*(K*r_up-1)-x*(gamma_up+(r_down/r_up)*gamma_down*c*c));
     return(multiconst*(term1+term2));
-
 }
 
 double Tomega_up_1b(double K,double r_up,double r_down,double gamma_up,double gamma_down,int N,double x)
@@ -196,6 +237,34 @@ void prinstuff_1b(int N,std::vector<double> &G,arma::Mat<double> &A,std::vector<
     printf("A-=%lf\n",Adown_1b(K,r_up,r_down,gamma_up,gamma_down,N));
 }
 
+void prinstuff_1a(int N,std::vector<double> &G,arma::Mat<double> &A,std::vector<double> &I,std::vector<double> &e1,std::vector<double> &eomega,std::vector<double> &egamma)
+{
+    FILE *f0=fopen("TempProm.txt","w");
+
+    double r_up;
+    printf("r+: ");
+    std::cin >>r_up;
+
+    double r_down;
+    printf("r-: ");
+    std::cin >>r_down;
+
+    double gamma_up;
+    printf("<G>+: ");
+    std::cin >>gamma_up;
+
+    double gamma_down;
+    printf("<G>-: ");
+    std::cin >>gamma_down;
+
+    for (int i = 1; i < N; ++i)
+    {
+        fprintf(f0,"%.15lf   %.15lf   %.15lf   %.15lf     %.15lf    %.15lf    %.15lf    %.15lf    %.15lf    %.15lf    %.15lf   \n",G[i]/I[i],A(i,0)/I[i],e1[i],eomega[i],egamma[i],Te1_up_1a(r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]),0.0,Tomega_up_1a(r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]),Tomega_down_1a(r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]),Tgamma_up_1a(r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]),Tgamma_down_1a(r_up,r_down,gamma_up,gamma_down,N,G[i]/I[i]));
+        //fprintf(f0, " \n" );
+    }
+    fclose(f0);
+}
+
 int main()
 {
 	using namespace std;
@@ -293,6 +362,18 @@ int main()
 	printf("stuff loaded\n");
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
    
-	prinstuff_1b(N,G,A,I,e1,eomega,egamma);
+    int caso;
+    printf("Regime?: (0 1a)  (1 1b) ");
+    std::cin >>caso;
+
+    if(caso==1)
+    {
+        prinstuff_1b(N,G,A,I,e1,eomega,egamma); 
+    }
+    if(caso==0)
+    {
+        prinstuff_1a(N,G,A,I,e1,eomega,egamma); 
+    }
+
 	return 0;
 }
