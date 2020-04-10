@@ -75,7 +75,7 @@ struct push_back_state_and_time
 
 
 
-void inicialcond(state_type &x,int N,boost::mt19937 &rng,int caso,vector<state_type> x_vec)
+void inicialcond(state_type &x,int N,boost::mt19937 &rng,int caso,std::vector<state_type> x_vec,size_t steps)
 {
     boost::uniform_real<> unif( 0, 2*M_PI );//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
@@ -112,8 +112,8 @@ void inicialcond(state_type &x,int N,boost::mt19937 &rng,int caso,vector<state_t
     	FILE *w= fopen("Xi.txt", "w");
     	for (int i = 0; i < N; ++i)
 		{
-			fprintf(w, "%f  ",x_vec[2*i] );
-			fprintf(w, "%f\n",x_vec[2*i+1] );
+			fprintf(w, "%f  ",x_vec[steps][2*i] );
+			fprintf(w, "%f\n",x_vec[steps][2*i+1] );
 		}
 		fclose(w);
     }
@@ -388,16 +388,17 @@ void itera(double t_in, double t_fn,double dt,arma::Mat<double> &A,std::vector<d
     boost::mt19937 rng(static_cast<unsigned int>(std::time(0)));
     ///////////////////////////////////////////////////////////////////
 	double K=1;
+	size_t steps;
 	state_type x(2*N); //condiciones iniciales
     vector<state_type> x_vec;
     vector<double> times;
     if(t_in<1)
     {
-		inicialcond(x,N,rng,0);
+		inicialcond(x,N,rng,0,x_vec,steps);
     }
     else
     {
-		inicialcond(x,N,rng,1);
+		inicialcond(x,N,rng,1,x_vec,steps);
     }
 
 ///////////////////////////////////////////////////////////////////////
@@ -410,8 +411,9 @@ void itera(double t_in, double t_fn,double dt,arma::Mat<double> &A,std::vector<d
     int chunk_size = N/omp_get_max_threads();
     omp_set_schedule( omp_sched_static , chunk_size );
     printf("solving..\n");
-	size_t steps = integrate_adaptive(stepper, ho, x , t_in , t_fn , dt,push_back_state_and_time( x_vec , times )); //1 funcion. 2 condiciones iniciales. 3 tiempo inicial. 4 tiempo final. 5 dt inicial. 6 vector de posicion y tiempo
+	steps = integrate_adaptive(stepper, ho, x , t_in , t_fn , dt,push_back_state_and_time( x_vec , times )); //1 funcion. 2 condiciones iniciales. 3 tiempo inicial. 4 tiempo final. 5 dt inicial. 6 vector de posicion y tiempo
 	printsave(steps,x_vec,times,N);
+	inicialcond(x,N,rng,3,x_vec,steps);
 }
 
 int main()
