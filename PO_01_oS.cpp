@@ -429,7 +429,9 @@ int main()
     printf("Load CI (0 NO, 1 YES): ");
     std::cin >>load;
 
-    double dt=0.01;
+    double dt;
+    printf("dt (0.01): ");
+    std::cin >>dt;
 
     double T_t;
     printf("Total time: ");
