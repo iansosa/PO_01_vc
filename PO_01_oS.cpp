@@ -75,7 +75,7 @@ struct push_back_state_and_time
 
 
 
-void inicialcond(state_type &x,int N,boost::mt19937 &rng,int caso)
+void inicialcond(state_type &x,int N,boost::mt19937 &rng,int caso,vector<state_type> x_vec)
 {
     boost::uniform_real<> unif( 0, 2*M_PI );//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
@@ -106,6 +106,16 @@ void inicialcond(state_type &x,int N,boost::mt19937 &rng,int caso)
 			fscanf(r, "%lf", &x[2*i+1]); // momento inicial i
 		}
 		fclose(r);
+    }
+    if(caso==3)
+    {
+    	FILE *w= fopen("Xi.txt", "w");
+    	for (int i = 0; i < N; ++i)
+		{
+			fprintf(w, "%f  ",x_vec[2*i] );
+			fprintf(w, "%f\n",x_vec[2*i+1] );
+		}
+		fclose(w);
     }
 }
 
@@ -352,7 +362,8 @@ double calcH(arma::Mat<double> A,std::vector< state_type > x_vec, std::vector<do
 
 void printsave(size_t steps, std::vector< state_type > &x_vec,std::vector<double> &times,int N) //1 tiempo. 2 posicion. 3 momento. 4 energia potencial. 5 energia cinetica. 6 energia. 7 energia Total
 {
-	FILE *f=fopen("save.txt","w");
+
+	FILE *f=fopen("save.txt","a");
 
 	for( size_t i=0; i<steps; ++i )
 	{
@@ -435,6 +446,8 @@ int main()
 	fillI(I,N,rng,load);
 	fillFw(F,N,rng,load);
 	fillW(Fw,N,rng,load);
+	FILE *c=fopen("save.txt","w");
+	fclose(c);
 ////////////////////////////////////////////////////////////////////////////
 	int number_of_partitions=(int)((double)(T_t/dt)*2*N/20000000);
 	printf("%d\n",number_of_partitions );
