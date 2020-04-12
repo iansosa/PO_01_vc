@@ -475,6 +475,7 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 		}
 		printf("cudacall (%d/%d)\n",k+1,pasos);
 		calculateStuff(A,steps,x_vec_lin,N,G,flux_aux_d);
+		printf("cudacall (%d/%d) ended\n",k+1,pasos);
 
     }
 	
