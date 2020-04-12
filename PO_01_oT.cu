@@ -476,8 +476,8 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 		printf("cudacall (%d/%d)\n",k+1,pasos);
 		calculateStuff(A,steps,x_vec_lin,N,G,flux_aux_d);
 		printf("cudacall (%d/%d) ended\n",k+1,pasos);
-
     }
+    fclose(f);
 	
 	if(cudaMemcpy(flux_aux, flux_aux_d, (N+1)*N*sizeof(double), cudaMemcpyDeviceToHost)!=cudaSuccess)
 	{
@@ -491,11 +491,7 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 	FILE *g=fopen("T.txt","w");
 	for( int i=0; i<N; ++i )
 	{
-		if(i%(N/100)==0 && i < N)
-		{
-			printf("printing: %d \n", (int)(100.0*i/N));
-		}
-		printf("asd\n");
+
 		for (int j = 0; j < N+1; ++j)
 		{
 			fprintf(g,"%.10lf	  ",flux_aux[i+N*j]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
@@ -506,6 +502,7 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 		}
 		fprintf(g, "\n");
 	}
+	printf("factor %lf!\n",T_t_i/dt);
 }
 
 int main()
@@ -537,7 +534,7 @@ int main()
 ////////////////////////////////////////////////////////////////////////////
 	itera(A,G,N,T_t,StartPoint);
 	printf("cuda N=%d\n",N);
-	printf("factor 1000!\n");
+
 
 	return 0;
 }
