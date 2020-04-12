@@ -41,9 +41,9 @@ void calcproperties(double *flux_aux_d,double *x_vec_lin_d, double *A_lin_d, dou
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			for (int l = 0; l < N; ++l)
 			{
-				atomicAddD(&flux_aux_d[place+N*l],1000*A_lin_d[l+N*place]*sin(x_vec_lin_d[0+i*2+steps*2*l]-x_vec_lin_d[0+i*2+steps*2*place])*x_vec_lin_d[1+i*2+steps*2*place]/N);
+				atomicAddD(&flux_aux_d[place+N*l],1000.0*A_lin_d[l+N*place]*sin(x_vec_lin_d[0+i*2+steps*2*l]-x_vec_lin_d[0+i*2+steps*2*place])*x_vec_lin_d[1+i*2+steps*2*place]/N);
 			}
-			atomicAddD(&flux_aux_d[place+N*N],-1000*G_lin_d[place]*(x_vec_lin_d[1+i*2+steps*2*place]*x_vec_lin_d[1+i*2+steps*2*place]));
+			atomicAddD(&flux_aux_d[place+N*N],-1000.0*G_lin_d[place]*(x_vec_lin_d[1+i*2+steps*2*place]*x_vec_lin_d[1+i*2+steps*2*place]));
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		}
 	}
@@ -411,7 +411,7 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 {
 	double FinishPoint=1-StartPoint;
 	double T_t_i=T_t;
-	T_t=T_t*FinishPoint;
+	//T_t=T_t*FinishPoint;
 	double dt=calcdt(N);
 	printf("%lf\n",dt );
 
