@@ -484,6 +484,7 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 		printf("fluxmal\n");
 		return;
 	}
+	printf("copied to memory\n");
 
 	FILE *g=fopen("T.txt","w");
 	for( int i=0; i<N; ++i )
