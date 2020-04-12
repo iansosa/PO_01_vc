@@ -459,6 +459,7 @@ int main()
 	double t_fn;
 	for (int i = 0; i < number_of_partitions; ++i)
 	{
+		printf("part (%d/%d)\n",i+1,number_of_partitions );
 		t_fn=t_in+(T_t/number_of_partitions);
 		itera(t_in,t_fn,dt,A,I,G,F,Fw,N);
 		t_in=t_fn;
