@@ -423,12 +423,12 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 	double *flux_aux;
-	double *flux_aux_aux;
+	//double *flux_aux_aux;
 	double *flux_aux_d;
 	double *x_vec_lin;
 	///
 	flux_aux=(double*)malloc(sizeof(double)*N*(N+1));
-	flux_aux_aux=(double*)malloc(sizeof(double)*N*(N+1));
+	//flux_aux_aux=(double*)malloc(sizeof(double)*N*(N+1));
 	if(cudaMalloc(&flux_aux_d, sizeof(double)*N*(N+1))!=cudaSuccess)
 	{
 		printf("erroralocaflux\n");
@@ -477,7 +477,7 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 		}
 		printf("cudacall (%d/%d)\n",k+1,pasos);
 		calculateStuff(A,steps,x_vec_lin,N,G,flux_aux_d);
-		if(cudaMemcpy(flux_aux_aux, flux_aux_d, (N+1)*N*sizeof(double), cudaMemcpyDeviceToHost)!=cudaSuccess)
+		/*if(cudaMemcpy(flux_aux_aux, flux_aux_d, (N+1)*N*sizeof(double), cudaMemcpyDeviceToHost)!=cudaSuccess)
 		{
 			printf("fluxmal\n");
 			return;
@@ -488,11 +488,16 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 			{
 				flux_aux[i+N*j]=flux_aux[i+N*j]+flux_aux_aux[i+N*j];
 			}
-		}
+		}*/
 		printf("cudacall (%d/%d) ended\n",k+1,pasos);
     }
     fclose(f);
-	
+
+	if(cudaMemcpy(flux_aux, flux_aux_d, (N+1)*N*sizeof(double), cudaMemcpyDeviceToHost)!=cudaSuccess)
+	{
+		printf("fluxmal\n");
+		return;
+	}
 	printf("copied to memory\n");
 	printf("%.15lf\n",flux_aux[0+N*1]);
 	printf("%.15lf\n",flux_aux[1+N*0]);
