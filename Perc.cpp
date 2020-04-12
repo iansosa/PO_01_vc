@@ -14,7 +14,7 @@
 
 typedef std::vector< double > state_type;
 
-void fillK(arma::Mat<double> &K,int N,boost::mt19937 &rng,double set)
+void fillK(arma::Mat<int> &K,int N,boost::mt19937 &rng,double set)
 {
     boost::uniform_real<> unif( 0, 1 );//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
@@ -45,21 +45,24 @@ void fillK(arma::Mat<double> &K,int N,boost::mt19937 &rng,double set)
 ///////////
 }
 
-void checkitera(arma::Mat<double> &K,int N,int i,int j)
+void checkitera(arma::Mat<int> &K,int N,int i,int j)
 {
 	K(i,j)=2;
+	K(j,i)=2;
 	for (int k = 0; k < N; ++k)
 	{
 		if(K(j,k)==1)
 		{
+			//printf("asd %d  %d\n",j,k);
 			checkitera(K,N,j,k);
+
 		}
 	}
 }
 
-int check(arma::Mat<double> &K,int N)
+int check(arma::Mat<int> &K,int N)
 {
-    arma::Mat<double> B(N,N);
+    arma::Mat<int> B(N,N);
    	for (int i = 0; i < N; ++i)
 	{
 		for (int j = 0; j < N; ++j)
@@ -98,15 +101,18 @@ int main()
     printf("N: ");
     std::cin >>N;
     double set;
-    arma::Mat<double> K(N,N);
-    int npasos;
-    printf("npasos: ");
-    std::cin >>npasos;
+    arma::Mat<int> K(N,N);
+    int npasos_i;
+    printf("npasos_i: ");
+    std::cin >>npasos_i;
+    int npasos_f;
+    printf("npasos_f: ");
+    std::cin >>npasos_f;
 ////////////////////////////////////////////////////////////////////////////
-    for (int j = 0; j < npasos; ++j)
+    for (int j = npasos_i; j < npasos_f; ++j)
     {
-    	printf("porcentaje: %lf\n", (double)100.0*j/npasos );
-    	set=(double)(j)/npasos;
+    	printf("porcentaje: %lf\n", (double)100.0*j/(npasos_f-npasos_i) );
+    	set=(double)(j)/npasos_f;
         sprintf(savename1,"Ai_%.3lf.txt",set);
     	f1=fopen(savename1,"w");
         sprintf(savename2,"Neighbors_%.3lf.txt",set);
@@ -122,11 +128,11 @@ int main()
 					{
 						if(i==j)
 						{
-							fprintf(f1, "%lf  ",2*K(i,j));
+							fprintf(f1, "%d  ",2*K(i,j));
 						}
 						else
 						{
-							fprintf(f1, "%lf  ",K(i,j));
+							fprintf(f1, "%d  ",K(i,j));
 						}
 						
 					}
