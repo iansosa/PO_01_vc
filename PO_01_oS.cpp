@@ -381,7 +381,7 @@ void printsave(size_t steps, std::vector< state_type > &x_vec,std::vector<double
 	fclose(f);
 }
 
-void itera(double t_in, double t_fn,double dt,arma::Mat<double> &A,std::vector<double> &I,std::vector<double> &G,std::vector<double> &F,std::vector<double> &Fw,int N)
+void itera(double t_in, double t_fn,double dt,arma::Mat<double> &A,std::vector<double> &I,std::vector<double> &G,std::vector<double> &F,std::vector<double> &Fw,int N,int load)
 {
     using namespace std;
     using namespace boost::numeric::odeint;
@@ -392,7 +392,7 @@ void itera(double t_in, double t_fn,double dt,arma::Mat<double> &A,std::vector<d
 	state_type x(2*N); //condiciones iniciales
     vector<state_type> x_vec;
     vector<double> times;
-    if(t_in<1)
+    if(t_in<1 && load !=1)
     {
 		inicialcond(x,N,rng,0,x_vec,steps);
     }
@@ -461,7 +461,7 @@ int main()
 	{
 		printf("part (%d/%d)\n",i+1,number_of_partitions );
 		t_fn=t_in+(T_t/number_of_partitions);
-		itera(t_in,t_fn,dt,A,I,G,F,Fw,N);
+		itera(t_in,t_fn,dt,A,I,G,F,Fw,N,load);
 		t_in=t_fn;
 	}
 	printf("N=%d\n",N);
