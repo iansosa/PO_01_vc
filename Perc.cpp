@@ -109,10 +109,10 @@ int main()
     printf("npasos_f: ");
     std::cin >>npasos_f;
 ////////////////////////////////////////////////////////////////////////////
-    for (int j = npasos_i; j < npasos_f; ++j)
+    for (int l = npasos_i; l < npasos_f; ++l)
     {
-    	printf("porcentaje: %lf\n", (double)100.0*j/(npasos_f-npasos_i) );
-    	set=(double)(j)/npasos_f;
+    	printf("porcentaje: %lf\n", (double)100.0*l/(npasos_f-npasos_i) );
+    	set=(double)(l)/npasos_f;
         sprintf(savename1,"Ai_%.3lf.txt",set);
     	f1=fopen(savename1,"w");
         sprintf(savename2,"Neighbors_%.3lf.txt",set);
