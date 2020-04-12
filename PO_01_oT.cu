@@ -511,7 +511,7 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 		}
 		fprintf(g, "\n");
 	}
-	printf("factor %lf!\n",T_t_i/dt);
+	printf("factor %lf!\n",T_t/dt);
 }
 
 int main()
