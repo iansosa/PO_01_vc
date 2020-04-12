@@ -485,6 +485,8 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 		return;
 	}
 	printf("copied to memory\n");
+	printf("%.15lf\n",flux_aux[0+N*1]);
+	printf("%.15lf\n",flux_aux[1+N*0]);
 
 	FILE *g=fopen("T.txt","w");
 	for( int i=0; i<N; ++i )
