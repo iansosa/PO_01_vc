@@ -407,8 +407,11 @@ double calcdt(int N)
 	return(dt);
 }
 
-void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t)
+void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double StartPoint)
 {
+	double FinishPoint=1-StartPoint;
+	double T_t_i=T_t;
+	T_t=T_t*FinishPoint;
 	double dt=calcdt(N);
 	printf("%lf\n",dt );
 
@@ -446,6 +449,15 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t)
 //////////////////////////////////////////////////////////////////////////////////////////////////
     double aux;
 	FILE *f=fopen("save.txt","r");
+	for (int k = 0; k < StartPoint*T_t_i/dt; ++k)
+	{
+		fscanf(f, "%lf", &aux);
+		for (int i = 0; i < N; ++i)
+		{
+			fscanf(f, "%lf", &aux);
+			fscanf(f, "%lf", &aux);
+		}
+	}
     for (int k = 0; k < pasos; ++k)
     {
 		for (int j = 0; j < steps; ++j)
@@ -474,13 +486,17 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t)
 	FILE *g=fopen("T.txt","w");
 	for( int i=0; i<N; ++i )
 	{
-		if(i%(steps/100)==0 && i < N)
+		if(i%(N/100)==0 && i < N)
 		{
 			printf("printing: %d \n", (int)(100.0*i/N));
 		}
 		for (int j = 0; j < N+1; ++j)
 		{
-			fprintf(g,"%.15lf	  ",flux_aux[i+N*j]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
+			fprintf(g,"%.15lf	  ",flux_aux[i+N*j]/(T_t/dt)); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
+		}
+		if(flux_aux[i+N*N]>0)
+		{
+			printf("%d tiene su gamma alreves\n", i);
 		}
 		fprintf(g, "\n");
 	}
@@ -502,6 +518,10 @@ int main()
     printf("Total Time: ");
     std::cin >>T_t;
 
+    double StartPoint;
+    printf("Start Point [x:1]: ");
+    std::cin >>StartPoint;
+
     arma::Mat<double> A(N,N);
     vector<double> G(N);
 
@@ -509,7 +529,7 @@ int main()
 	fillA(A,N,rng,1);
 	fillG(G,N,rng,1);
 ////////////////////////////////////////////////////////////////////////////
-	itera(A,G,N,T_t);
+	itera(A,G,N,T_t,StartPoint);
 	printf("cuda N=%d\n",N);
 
 	return 0;
