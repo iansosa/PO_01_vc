@@ -493,9 +493,10 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 		{
 			printf("printing: %d \n", (int)(100.0*i/N));
 		}
+		printf("asd\n");
 		for (int j = 0; j < N+1; ++j)
 		{
-			fprintf(g,"%.15lf	  ",flux_aux[i+N*j]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
+			fprintf(g,"%.10lf	  ",flux_aux[i+N*j]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
 		}
 		if(flux_aux[i+N*N]>0)
 		{
