@@ -374,7 +374,7 @@ void printsave(size_t steps, std::vector< state_type > &x_vec,std::vector<double
 		fprintf(f,"%lf  ",times[i] );
 		for (int j = 0; j < N; ++j)
 		{
-			fprintf(f,"%lf	  %lf   ",x_vec[i][2*j],x_vec[i][2*j+1]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
+			fprintf(f,"%.15lf	  %.15lf   ",x_vec[i][2*j],x_vec[i][2*j+1]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
 		}
 		fprintf(f,"\n");
 	}	
@@ -453,7 +453,7 @@ int main()
 	FILE *c=fopen("save.txt","w");
 	fclose(c);
 ////////////////////////////////////////////////////////////////////////////
-	int number_of_partitions=(int)((double)(T_t/dt)*2*N/20000000);
+	int number_of_partitions=1+(int)((double)(T_t/dt)*2*N/20000000);
 	printf("%d\n",number_of_partitions );
 	double t_in=0.0;
 	double t_fn;

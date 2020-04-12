@@ -41,9 +41,9 @@ void calcproperties(double *flux_aux_d,double *x_vec_lin_d, double *A_lin_d, dou
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			for (int l = 0; l < N; ++l)
 			{
-				atomicAddD(&flux_aux_d[place+N*l],A_lin_d[l+N*place]*sin(x_vec_lin_d[0+i*2+steps*2*l]-x_vec_lin_d[0+i*2+steps*2*place])*x_vec_lin_d[1+i*2+steps*2*place]/N);
+				atomicAddD(&flux_aux_d[place+N*l],1000*A_lin_d[l+N*place]*sin(x_vec_lin_d[0+i*2+steps*2*l]-x_vec_lin_d[0+i*2+steps*2*place])*x_vec_lin_d[1+i*2+steps*2*place]/N);
 			}
-			atomicAddD(&flux_aux_d[place+N*N],-G_lin_d[place]*(x_vec_lin_d[1+i*2+steps*2*place]*x_vec_lin_d[1+i*2+steps*2*place]));
+			atomicAddD(&flux_aux_d[place+N*N],-1000*G_lin_d[place]*(x_vec_lin_d[1+i*2+steps*2*place]*x_vec_lin_d[1+i*2+steps*2*place]));
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		}
 	}
@@ -473,6 +473,7 @@ void itera(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double 
 				fscanf(f, "%lf", &x_vec_lin[1+j*2+steps*2*i]);
 			}
 		}
+		printf("cudacall (%d/%d)\n",k+1,pasos);
 		calculateStuff(A,steps,x_vec_lin,N,G,flux_aux_d);
 
     }
@@ -531,6 +532,7 @@ int main()
 ////////////////////////////////////////////////////////////////////////////
 	itera(A,G,N,T_t,StartPoint);
 	printf("cuda N=%d\n",N);
+	printf("factor 1000!\n");
 
 	return 0;
 }
