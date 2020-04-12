@@ -103,10 +103,10 @@ int main()
     double set;
     arma::Mat<int> K(N,N);
     int npasos_i;
-    printf("npasos_i: ");
+    printf("npasos_i(x,N): ");
     std::cin >>npasos_i;
     int npasos_f;
-    printf("npasos_f: ");
+    printf("npasos_f(N): ");
     std::cin >>npasos_f;
 ////////////////////////////////////////////////////////////////////////////
     for (int l = npasos_i; l < npasos_f; ++l)
