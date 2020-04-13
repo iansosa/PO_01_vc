@@ -9,6 +9,8 @@
 #include <armadillo>
 #include <utility>
 #include <omp.h>
+#include <algorithm>
+#include <random>
 #include <sys/resource.h>
 #include <boost/numeric/odeint.hpp>
 #include <boost/numeric/odeint/external/openmp/openmp.hpp>
@@ -816,6 +818,7 @@ int fillK_a(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
     boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen2( rng , unif2 );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
     FILE *f;
     std::vector<int> K_dist(N);
+	auto rng2 = std::default_random_engine {};
 
     int stubs_sum=1;
 
@@ -844,6 +847,7 @@ int fillK_a(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
     		}
     	}
     }
+	std::shuffle(std::begin(K_dist), std::end(K_dist), rng2);
     int current;
     int suitables;
     std::vector<int> suitables_list(N);
