@@ -818,7 +818,8 @@ int fillK_a(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
     boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen2( rng , unif2 );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
     FILE *f;
     std::vector<int> K_dist(N);
-	auto rng2 = std::default_random_engine {};
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine e(seed);
 
     int stubs_sum=1;
 
@@ -847,7 +848,7 @@ int fillK_a(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
     		}
     	}
     }
-	std::shuffle(std::begin(K_dist), std::end(K_dist), rng2);
+	std::shuffle(std::begin(K_dist), std::end(K_dist), e);
     int current;
     int suitables;
     std::vector<int> suitables_list(N);
@@ -1212,10 +1213,12 @@ void Tproperties(arma::Mat<double> &P,int N)
 		P(i,1)=P(i,1)+N_i;
 		P(i,2)=P(i,2)+N_i_in;
 		P(i,3)=P(i,3)+N_i_out;
-		P(i,4)=P(i,4)+j_i;
-		P(i,5)=P(i,5)+j_i_in;
-		P(i,6)=P(i,6)+j_i_out;
-		P(i,7)=P(i,7)+T(i,N);
+		P(i,4)=P(i,4)+N_i_in/N_i;
+		P(i,5)=P(i,5)+j_i;
+		P(i,6)=P(i,6)+j_i_in;
+		P(i,7)=P(i,7)+j_i_out;
+		P(i,8)=P(i,8)+j_i_in/j_i;
+		P(i,9)=P(i,9)+T(i,N);
 	}
 }
 
@@ -1263,7 +1266,7 @@ int main()
     	loop=1;
     }
 
-    arma::Mat<double> P(N,8);
+    arma::Mat<double> P(N,10);
     P.zeros();
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1288,7 +1291,7 @@ int main()
     FILE *f=fopen("P.txt","w");
     for (int i = 0; i < N; ++i)
 	{
-		for (int j = 0; j < 8; ++j)
+		for (int j = 0; j < 10; ++j)
 		{
 			if(j>0)
 			{
