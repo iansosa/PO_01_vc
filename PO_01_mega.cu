@@ -1213,7 +1213,7 @@ void Tproperties(arma::Mat<double> &P,int N)
 		P(i,1)=P(i,1)+N_i;
 		P(i,2)=P(i,2)+N_i_in;
 		P(i,3)=P(i,3)+N_i_out;
-		P(i,4)=P(i,4)+N_i_in/N_i;
+		P(i,4)=P(i,4)+(double)N_i_in/N_i;
 		P(i,5)=P(i,5)+j_i;
 		P(i,6)=P(i,6)+j_i_in;
 		P(i,7)=P(i,7)+j_i_out;
@@ -1272,6 +1272,7 @@ int main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     for (int i = 0; i < loop; ++i)
     {
+    	printf("loop (%d/%d)\n",i+1,loop+1 );
     	getA_a(rng,N,caso);
 		changeA_ca(N,K,kappa);
 		int caso2;
@@ -1286,6 +1287,7 @@ int main()
     	solve_b(N,T_t,caso2,rng,dt_b); //el 0 no carga condiciones iniciales
     	getT_c(N,T_t,StartPoint_c,rng);
     	Tproperties(P,N);
+    	printf("loop #%d\n",loop+1 );
     }
 
     FILE *f=fopen("P.txt","w");
