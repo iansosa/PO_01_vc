@@ -1205,7 +1205,7 @@ void Tproperties(arma::Mat<double> &P,int N)
 			{
 				N_i=N_i+1;
 				N_i_out=N_i_out+1;
-				j_i=j_i+T(i,j);
+				j_i=j_i-T(i,j);
 				j_i_out=j_i_out+T(i,j);
 			}
 		}
