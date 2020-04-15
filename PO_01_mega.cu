@@ -1297,7 +1297,7 @@ int main()
 		{
 			if(j>0)
 			{
-				P(i,j)=(double)P(i,j)/loop;
+				P(i,j)=(double)(P(i,j)/loop);
 			}
 			fprintf(f, "%f  ",P(i,j));
 		}
