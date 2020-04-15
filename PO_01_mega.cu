@@ -1299,7 +1299,7 @@ int main()
 			{
 				P(i,j)=(double)(P(i,j)/loop);
 			}
-			fprintf(f, "%f  ",P(i,j));
+			fprintf(f, "%lf  ",P(i,j));
 		}
 		fprintf(f, "\n");
 	}
