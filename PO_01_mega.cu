@@ -1258,9 +1258,9 @@ void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int
 		P(i+N*Caps[i],7)=P(i+N*Caps[i],7)+j_i_out;
 		P(i+N*Caps[i],8)=P(i+N*Caps[i],8)+j_i_in/(j_i_in-j_i_out);
 		P(i+N*Caps[i],9)=P(i+N*Caps[i],9)+T(i,N);
-		P(i+N*Caps[i],10)=P(i+N*Caps[i],12)+j_i_prev;
-		P(i+N*Caps[i],11)=P(i+N*Caps[i],13)+j_i_next;
-		P(i+N*Caps[i],12)=P(i+N*Caps[i],10)+1;
+		P(i+N*Caps[i],10)=P(i+N*Caps[i],10)+j_i_prev;
+		P(i+N*Caps[i],11)=P(i+N*Caps[i],11)+j_i_next;
+		P(i+N*Caps[i],12)=P(i+N*Caps[i],12)+1;
 		P(i+N*Caps[i],13)=Caps[i];
 	}
 }
