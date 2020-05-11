@@ -233,7 +233,7 @@ double calcdt_c(int N)
 	return(dt);
 }
 
-void itera_c(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double StartPoint)
+void itera_c(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, double StartPoint,arma::Mat<double> &T,int place)
 {
 	double FinishPoint=1-StartPoint;
 	double T_t_i=T_t;
@@ -328,12 +328,15 @@ void itera_c(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, doubl
 	printf("%.15lf\n",flux_aux[0+N*1]);
 	printf("%.15lf\n",flux_aux[1+N*0]);
 
-	FILE *g=fopen("T.txt","w");
+    char savename1[80]={};
+    sprintf(savename1,"T_%d.txt",place);
+	FILE *g=fopen(savename1,"w");
 	for( int i=0; i<N; ++i )
 	{
 
 		for (int j = 0; j < N+1; ++j)
 		{
+			T(i,j)=flux_aux[i+N*j];
 			fprintf(g,"%.10lf	  ",flux_aux[i+N*j]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
 		}
 		if(flux_aux[i+N*N]>0)
@@ -345,7 +348,7 @@ void itera_c(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, doubl
 	printf("factor %lf!\n",T_t/dt);
 }
 
-void getT_c(int N, double T_t, double StartPoint,boost::mt19937 &rng)
+void getT_c(int N, double T_t, double StartPoint,boost::mt19937 &rng,arma::Mat<double> &T,int place)
 {
     using namespace std;
     arma::Mat<double> A(N,N);
@@ -354,7 +357,7 @@ void getT_c(int N, double T_t, double StartPoint,boost::mt19937 &rng)
 	fillA_c(A,N,rng,1);
 	fillG_c(G,N,rng,1);
 ////////////////////////////////////////////////////////////////////////////
-	itera_c(A,G,N,T_t,StartPoint);
+	itera_c(A,G,N,T_t,StartPoint,T,place);
 	printf("N (cuda)=%d\n",N);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,7 +422,7 @@ struct push_back_state_and_time
 
 void inicialcond_b(state_type &x,int N,boost::mt19937 &rng,int caso,std::vector<state_type> x_vec,size_t steps)
 {
-    boost::uniform_real<> unif( 0, 2*M_PI );//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::uniform_real<> unif( 0, 0.01);//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
 
     if(caso==0)
@@ -686,7 +689,7 @@ void itera_b(double t_in, double t_fn,double dt,arma::Mat<double> &A,std::vector
 	state_type x(2*N); //condiciones iniciales
     vector<state_type> x_vec;
     vector<double> times;
-    if(t_in<1 && load !=1)
+    if(t_in<1)
     {
 		inicialcond_b(x,N,rng,0,x_vec,steps);
     }
@@ -727,7 +730,7 @@ void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt)
 	FILE *c=fopen("save.txt","w");
 	fclose(c);
 ////////////////////////////////////////////////////////////////////////////
-	int number_of_partitions=1+(int)((double)(T_t/dt)*2*N/20000000);
+	int number_of_partitions=1+(int)((double)(T_t/dt)*2*N/10000000);
 	printf("%d\n",number_of_partitions );
 	double t_in=0.0;
 	double t_fn;
@@ -745,7 +748,7 @@ void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt)
 
 void generateKdist(int N,boost::mt19937 &rng, std::vector<int> &K_dist)
 {
-    boost::uniform_int<> unif( 1, N);//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::uniform_int<> unif( 3, 3);//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_int<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
     boost::uniform_real<> unif2( 0, 1 );//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen2( rng , unif2 );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
@@ -904,7 +907,7 @@ int fillK_a(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
 ///////////
 }
 
-void getA_a(boost::mt19937 &rng,int N,int caso2)
+void getA_a(boost::mt19937 &rng,int N,int caso2,int place)
 {
     const rlim_t kStackSize = 100 * 1024 * 1024;   // min stack size = 16 MB
     struct rlimit rl;
@@ -938,7 +941,7 @@ void getA_a(boost::mt19937 &rng,int N,int caso2)
 ////////////////////////////////////////////////////////////////////////////
         sprintf(savename1,"Ai.txt");
     	f1=fopen(savename1,"w");
-        sprintf(savename2,"Neighbors.txt");
+        sprintf(savename2,"Neighbors_%d.txt",place);
     	f2=fopen(savename2,"w");
 		while(1==1)
 		{
@@ -1015,15 +1018,16 @@ double mediann_ca(int N,arma::Mat<double> &A,int j,std::vector<int> &capes)
 	return(meditotal);
 }
 
-void capas_ca(int N,arma::Mat<double> &A,std::vector<double> &G)
+void capas_ca(int N,arma::Mat<double> &A,std::vector<double> &G,std::vector<int> &Caps,int place)
 {
 	std::vector<int> capes(N,-1);
 	capes[0]=0;
 	int Ntotal=1;
 	int Ncapas=0;
+	char savename1[80]={};
+    sprintf(savename1,"capas_%d.txt",place);
 
-	FILE *w= fopen("capas.txt", "w");
-	fprintf(w, "%d\n", 0);
+
 		for (int j = 0; j < N; ++j) //capas
 		{
 			if(Ntotal==N)
@@ -1038,7 +1042,7 @@ void capas_ca(int N,arma::Mat<double> &A,std::vector<double> &G)
 					{
 						if(A(i,k)>0 && capes[k]<0)
 						{
-							fprintf(w, "%d   ",k);
+
 							capes[k]=j+1;
 							Ntotal=Ntotal+1;
 						}
@@ -1046,8 +1050,9 @@ void capas_ca(int N,arma::Mat<double> &A,std::vector<double> &G)
 				}
 
 			}
-			fprintf(w, "\n" );
+			
 		}
+	
 	printf("%d=%d\n", Ntotal,N );
 
 	for (int i = 0; i < N; ++i)
@@ -1057,7 +1062,20 @@ void capas_ca(int N,arma::Mat<double> &A,std::vector<double> &G)
 			Ncapas=capes[i];
 		}
 	}
-
+	FILE *w= fopen(savename1, "w");
+	for (int i = 0; i <= Ncapas; ++i)
+	{
+		for (int j = 0; j < N; ++j)
+		{
+			if(capes[j]==i)
+			{
+				fprintf(w, "%d   ",j);
+			}
+		}
+		fprintf(w, "\n" );
+	}
+	fclose(w);
+								
 	double median=0;
 	int Cnumber=0;
 	for (int i = 0; i <= Ncapas; ++i)
@@ -1077,6 +1095,10 @@ void capas_ca(int N,arma::Mat<double> &A,std::vector<double> &G)
 		printf("Capa %d  N=%d\n",i, Cnumber );
 		printf("Capa %d  <N>=%lf\n",i, mediann_ca(N,A,i,capes) );
 	}
+	for (int i = 0; i < N; ++i)
+	{
+		Caps[i]=capes[i];
+	}
 }
 
 
@@ -1092,7 +1114,7 @@ void fillG_ca(std::vector<double> &G,int N)
 }
 
 
-void changeA_ca(int N,double K, double kappa)
+void changeA_ca(int N,double K, double kappa,std::vector<int> &Caps,int place)
 {
     int test=0;
 
@@ -1153,24 +1175,23 @@ void changeA_ca(int N,double K, double kappa)
 	fclose(w);
     }
 
-	capas_ca(N,A,G);
+	capas_ca(N,A,G,Caps,place);
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Tproperties(arma::Mat<double> &P,int N)
+void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int> &Caps)
 {
-	FILE *g=fopen("T.txt","r");
-    arma::Mat<double> T(N,N+1);
+	int max=0;
 	for( int i=0; i<N; ++i )
 	{
-		for (int j = 0; j < N+1; ++j)
+		if(max<=Caps[i])
 		{
-			fscanf(g,"%lf ",&T(i,j)); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
+			max=Caps[i];
 		}
+
 	}
-	fclose(g);
 	FILE *f=fopen("Gi.txt","r");
     std::vector<double> G(N);
 	for( int i=0; i<N; ++i )
@@ -1184,6 +1205,8 @@ void Tproperties(arma::Mat<double> &P,int N)
 	double j_i;
 	double j_i_in;
 	double j_i_out;
+	double j_i_prev;
+	double j_i_next;
 	for (int i = 0; i < N; ++i)
 	{
 		N_i=0;
@@ -1192,8 +1215,24 @@ void Tproperties(arma::Mat<double> &P,int N)
 		j_i=0;
 		j_i_in=0;
 		j_i_out=0;
+		j_i_prev=0;
+		j_i_next=0;
 		for (int j = 0; j < N; ++j)
 		{
+			if(i!=0)
+			{
+				if(Caps[j]==Caps[i-1])
+				{
+					j_i_prev=j_i_prev+T(i,j);
+				}
+			}
+			if(i!=N-1)
+			{
+				if(Caps[j]==Caps[i+1])
+				{
+					j_i_next=j_i_next+T(i,j);
+				}
+			}
 			if(T(i,j)>0.00000000000001)
 			{
 				N_i=N_i+1;
@@ -1205,27 +1244,93 @@ void Tproperties(arma::Mat<double> &P,int N)
 			{
 				N_i=N_i+1;
 				N_i_out=N_i_out+1;
-				j_i=j_i-T(i,j);
+				j_i=j_i+T(i,j);
 				j_i_out=j_i_out+T(i,j);
 			}
 		}
-		P(i,0)=G[i];
-		P(i,1)=P(i,1)+N_i;
-		P(i,2)=P(i,2)+N_i_in;
-		P(i,3)=P(i,3)+N_i_out;
-		P(i,4)=P(i,4)+(double)N_i_in/N_i;
-		P(i,5)=P(i,5)+j_i;
-		P(i,6)=P(i,6)+j_i_in;
-		P(i,7)=P(i,7)+j_i_out;
-		P(i,8)=P(i,8)+j_i_in/j_i;
-		P(i,9)=P(i,9)+T(i,N);
+		P(i+N*Caps[i],0)=G[i];
+		P(i+N*Caps[i],1)=P(i+N*Caps[i],1)+N_i;
+		P(i+N*Caps[i],2)=P(i+N*Caps[i],2)+N_i_in;
+		P(i+N*Caps[i],3)=P(i+N*Caps[i],3)+N_i_out;
+		P(i+N*Caps[i],4)=P(i+N*Caps[i],4)+(double)N_i_in/N_i;
+		P(i+N*Caps[i],5)=P(i+N*Caps[i],5)+j_i;
+		P(i+N*Caps[i],6)=P(i+N*Caps[i],6)+j_i_in;
+		P(i+N*Caps[i],7)=P(i+N*Caps[i],7)+j_i_out;
+		P(i+N*Caps[i],8)=P(i+N*Caps[i],8)+j_i_in/(j_i_in-j_i_out);
+		P(i+N*Caps[i],9)=P(i+N*Caps[i],9)+T(i,N);
+		P(i+N*Caps[i],10)=P(i+N*Caps[i],10)+1;
+		P(i+N*Caps[i],11)=Caps[i];
+		P(i+N*Caps[i],12)=P(i+N*Caps[i],12)+j_i_prev;
+		P(i+N*Caps[i],13)=P(i+N*Caps[i],13)+j_i_next;
 	}
+}
+
+void saveP(arma::Mat<double> &P,int N, int n_total,int place, FILE *gplotpipe)
+{
+    FILE *f=fopen("P.txt","w");
+    for (int i = 0; i < N*N; ++i)
+	{
+		if(P(i,n_total-2)>0.1)
+		{
+			for (int j = 0; j < n_total; ++j)
+			{
+				if(j>0 && j<n_total-2 )
+				{
+					fprintf(f, "%.10lf  ",(double)P(i,j)/P(i,n_total-2));
+				}
+				
+				else
+				{
+					fprintf(f, "%.10lf  ",P(i,j));
+				}
+			}
+			fprintf(f, "\n");
+		}
+
+	}
+	fclose(f);
+    FILE *g=fopen("P_save.txt","w");
+    for (int i = 0; i < N*N; ++i)
+	{
+			for (int j = 0; j < n_total; ++j)
+			{
+				fprintf(g, "%.10lf  ",P(i,j));
+			}
+			fprintf(g, "\n");
+	}
+	fclose(g);
+	FILE *fp=fopen("save_place.txt","w");
+	fprintf(fp, "%d\n",place);
+	fclose(fp);
+	fprintf(gplotpipe, "splot 'P.txt' u 1:(log($14)):12 w p palette pt 7 ps 0.5 \n" );
+	pclose(gplotpipe);
+}
+
+int loadP(arma::Mat<double> &P,int N, int n_total)
+{
+    FILE *f=fopen("P_save.txt","r");
+    for (int i = 0; i < N*N; ++i)
+	{
+			for (int j = 0; j < n_total; ++j)
+			{
+				fscanf(f, "%lf",&P(i,j));
+			}
+	}
+    fclose(f);
+    FILE *fp=fopen("save_place.txt","r");
+    int place;
+    fscanf(fp, "%d",&place);
+    fclose(fp);
+    return(place);
 }
 
 int main()
 {
     using namespace std;
     boost::mt19937 rng(static_cast<unsigned int>(std::time(0)));  /// el engine para generar numeros random
+
+    FILE *gplotpipe;
+
 //////////////////////////////////////////////////////////
     int N;
     printf("N: ");
@@ -1255,26 +1360,53 @@ int main()
     printf("Generate Kdist? (0 NO:: 1 YES):  ");
     std::cin >>caso;
 
+    int casoP;
+
+
+
     int loop;
     if(caso==0)
     {
+    	printf("Load P? (0 NO:: 1 YES):  ");
+    	std::cin >>casoP;
     	printf("Loops: ");
     	std::cin >>loop;
     }
     else
     {
+    	casoP=0;
     	loop=1;
     }
 
-    arma::Mat<double> P(N,10);
+    int n_total=14;
+    arma::Mat<double> P(N*N,n_total);
+    arma::Mat<double> T(N,N+1);
+    std::vector<int> Caps(N);
     P.zeros();
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    for (int i = 0; i < loop; ++i)
+    int place=0;
+    if(casoP==1)
     {
-    	printf("loop (%d/%d)\n",i+1,loop+1 );
-    	getA_a(rng,N,caso);
-		changeA_ca(N,K,kappa);
+    	place=loadP(P,N,n_total);
+    	if(place>=loop)
+    	{
+    		printf("place: %d >= %d\n",place,loop );
+    	}
+    }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    for (int i = place; i < loop; ++i)
+    {
+		gplotpipe= popen("gnuplot -p", "w");
+    	fprintf(gplotpipe, "set terminal png size 1022,606\n");
+    	fprintf(gplotpipe, "set yr[-15:5]\n" );
+    	fprintf(gplotpipe, "set view map\n" );
+        fprintf(gplotpipe, "set output 'Jnext_%d.png'\n",i );
+    	printf("loop (%d/%d)\n",i+1,loop );
+    	getA_a(rng,N,caso,i);
+		changeA_ca(N,K,kappa,Caps,i);
+
 		int caso2;
 		if(caso==1)
 		{
@@ -1285,26 +1417,11 @@ int main()
 			caso2=1;
 		}
     	solve_b(N,T_t,caso2,rng,dt_b); //el 0 no carga condiciones iniciales
-    	getT_c(N,T_t,StartPoint_c,rng);
-    	Tproperties(P,N);
-    	printf("loop #%d\n",loop+1 );
+    	getT_c(N,T_t,StartPoint_c,rng,T,i);
+    	Tproperties(P,N,T,Caps);
+    	printf("loop #%d\n",loop );
+    	saveP(P,N,n_total,i+1,gplotpipe);
     }
-
-    FILE *f=fopen("P.txt","w");
-    for (int i = 0; i < N; ++i)
-	{
-		for (int j = 0; j < 10; ++j)
-		{
-			if(j>0)
-			{
-				P(i,j)=(double)(P(i,j)/loop);
-			}
-			fprintf(f, "%lf  ",P(i,j));
-		}
-		fprintf(f, "\n");
-	}
-
-    fclose(f);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	return 0;
