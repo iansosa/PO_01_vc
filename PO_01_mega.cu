@@ -1219,20 +1219,16 @@ void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int
 		j_i_next=0;
 		for (int j = 0; j < N; ++j)
 		{
-			if(i!=0)
+			if(Caps[j]==Caps[i]-1)
 			{
-				if(Caps[j]==Caps[i-1])
-				{
-					j_i_prev=j_i_prev+T(i,j);
-				}
+				j_i_prev=j_i_prev+T(i,j);
 			}
-			if(i!=N-1)
+		
+			if(Caps[j]==Caps[i]+1)
 			{
-				if(Caps[j]==Caps[i+1])
-				{
-					j_i_next=j_i_next+T(i,j);
-				}
+				j_i_next=j_i_next+T(i,j);
 			}
+
 			if(T(i,j)>0.00000000000001)
 			{
 				N_i=N_i+1;
