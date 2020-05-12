@@ -430,8 +430,8 @@ void inicialcond_b(state_type &x,int N,boost::mt19937 &rng,int caso,std::vector<
     	FILE *w= fopen("Xi.txt", "w");
     	for (int i = 0; i < N; ++i)
 		{
-			fprintf(w, "%f  ",gen() );
-			fprintf(w, "%f\n",0.0 );
+			fprintf(w, "%.15lf  ",gen() );
+			fprintf(w, "%.15lf\n",0.0 );
 		}
 		fclose(w);
 		FILE *r= fopen("Xi.txt", "r");
@@ -457,8 +457,8 @@ void inicialcond_b(state_type &x,int N,boost::mt19937 &rng,int caso,std::vector<
     	FILE *w= fopen("Xi.txt", "w");
     	for (int i = 0; i < N; ++i)
 		{
-			fprintf(w, "%f  ",x_vec[steps][2*i] );
-			fprintf(w, "%f\n",x_vec[steps][2*i+1] );
+			fprintf(w, "%.15lf  ",x_vec[steps][2*i] );
+			fprintf(w, "%.15lf\n",x_vec[steps][2*i+1] );
 		}
 		fclose(w);
     }
@@ -672,7 +672,7 @@ void printsave_b(size_t steps, std::vector< state_type > &x_vec,std::vector<doub
 		fprintf(f,"%lf  ",times[i] );
 		for (int j = 0; j < N; ++j)
 		{
-			fprintf(f,"%.10lf	  %.10lf   ",x_vec[i][2*j],x_vec[i][2*j+1]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
+			fprintf(f,"%.15lf	  %.15lf   ",x_vec[i][2*j],x_vec[i][2*j+1]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
 		}
 		fprintf(f,"\n");
 	}	
