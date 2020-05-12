@@ -119,7 +119,7 @@ void fillA_c(arma::Mat<double> &A,int N,boost::mt19937 &rng,int caso)
 void fillG_c(std::vector<double> &G,int N,boost::mt19937 &rng,int caso)
 {
 
-    boost::normal_distribution<> unif(2.5, 0.2 );//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::normal_distribution<> unif(2.5, 0.5 );//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::normal_distribution<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
 
     if(caso==0)
@@ -1261,6 +1261,177 @@ void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int
 	}
 }
 
+double wcalc(int N,double T_t, double dt,std::vector<int> &Caps,arma::Mat<double> &X)
+{
+	int max=0;
+	double w_prime=0;
+	double w_prime_current=0;
+	int totaltime=(int)(100/dt);
+	for( int i=0; i<N; ++i )
+	{
+		if(max<=Caps[i])
+		{
+			max=Caps[i];
+		}
+
+	}
+	int promedio=0;
+	for (int i = 0; i < N; ++i)
+	{
+		if(Caps[i]==max)
+		{
+			promedio=promedio+1;
+			w_prime_current=0;
+			for (int j = 0; j < totaltime; ++j)
+			{
+				w_prime_current=w_prime_current+X(j,2*i+1);
+			}
+			w_prime_current=(double)(w_prime_current/totaltime);
+			w_prime=w_prime+w_prime_current;
+		}
+	}
+	return((double)(w_prime/promedio));
+}
+
+double calcAmp(int N,double T_t, double dt,std::vector<int> &Caps,double w,int i_capa,arma::Mat<double> &X)
+{
+	int totaltime=(int)(10/dt);
+	int Amps=0;
+	double Amp_current=0;
+
+	double max=-1000;
+	double min=1000;
+
+	for (int i = 0; i < N; ++i)
+	{
+		if(i_capa==Caps[i])
+		{
+			Amps=Amps+1;
+			max=-1000;
+			for (int k = totaltime-1; k >= 0; --k)
+			{
+				if(max<=X(k,2*i)-w*k*dt)
+				{
+					max=X(k,2*i)-w*k*dt;
+				}
+			}
+			min=1000;
+			for (int k = totaltime-1; k >= 0; --k)
+			{
+				if(min>=X(k,2*i)-w*k*dt)
+				{
+					min=X(k,2*i)-w*k*dt;
+				}
+			}
+			Amp_current=Amp_current+(max-min)/2.0;
+		}
+	}
+	return((double)(Amp_current/Amps));
+}
+
+int next(int N,std::vector<int> &Caps,arma::Mat<double> &T,int i_capa)
+{
+	int N_next=0;
+	for (int i = 0; i < N; ++i)
+	{
+		if(i_capa==Caps[i])
+		{
+			for (int j = 0; j < N; ++j)
+			{
+				if(Caps[j]==i_capa+1)
+				{
+					if(T(i,j)>0.00000000000001 || T(i,j)<-0.00000000000001)
+					{
+						N_next=N_next+1;
+					}
+				}
+
+			}
+		}
+	}
+	return(N_next);
+}
+
+int Ncurrent(int N,std::vector<int> &Caps,int i_capa)
+{
+	int N_current=0;
+	for (int i = 0; i < N; ++i)
+	{
+		if(i_capa==Caps[i])
+		{
+			N_current=N_current+1;
+		}
+	}
+	return(N_current);
+}
+
+int Nmax(int N,std::vector<int> &Caps)
+{
+	int N_max=0;
+	for (int i = 0; i < N; ++i)
+	{
+		if(N_max<=Caps[i])
+		{
+			N_max=Caps[i];
+		}
+	}
+	return(N_max);
+}
+
+void Sproperties(arma::Mat<double> &S,int N,int n_stats_total,std::vector<int> &Caps,double T_t, double dt,arma::Mat<double> &T)
+{
+	int totaltime=(int)100/dt;
+	double basura;
+	arma::Mat<double> X(totaltime,2*N);
+
+	FILE *f=fopen("save.txt","r");
+
+	printf("loading (Sproperties)\n");
+	for( size_t i=0; i<T_t/dt-totaltime; ++i )
+	{
+		fscanf(f,"%lf  ",&basura );
+		for (int j = 0; j < N; ++j)
+		{
+			fscanf(f,"%lf	  %lf   ",&basura,&basura); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
+		}
+	}
+	for( size_t i=0; i<totaltime; ++i )
+	{
+		fscanf(f,"%lf  ",&basura );
+		for (int j = 0; j < N; ++j)
+		{
+			fscanf(f,"%lf	  %lf   ",&X(i,2*j),&X(i,2*j+1)); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
+		}
+	}	
+	printf("loading done (Sproperties)\n");
+	fclose(f);
+
+	double w=wcalc(N,T_t,dt,Caps,X);
+	printf("w'=%.15lf\n", w);
+	int N_max=Nmax(N,Caps);
+
+
+	for (int i = 0; i <= N_max; ++i)
+	{
+		S(i,1)=S(i,1)+Ncurrent(N,Caps,i);
+		S(i,2)=S(i,2)+next(N,Caps,T,i);
+		S(i,3)=S(i,3)+calcAmp(N,T_t,dt,Caps,w,i,X);
+		S(i,4)=S(i,4)+w;
+		S(i,5)=S(i,5)+1;
+		printf("S(%d): N=%lf, N_next=%lf, A=%.15lf, w=%.15lf, iter=%lf\n",i,S(i,1)/S(i,5) ,S(i,2)/S(i,5) ,S(i,3)/S(i,5) ,S(i,4)/S(i,5) ,S(i,5) );
+	}
+	double w_teorico=0;
+	for (int i = 1; i <= N_max; ++i)
+	{
+		w_teorico=w_teorico+(S(i,1)/S(i,5))*pow(S(i,3)/S(i,5),2);
+	}
+	w_teorico=0.5*w_teorico/N;
+	printf("w teorico=%.15lf\n",w_teorico);
+	printf("error=%.15lf\n",100*w_teorico/(S(0,4)/S(0,5))-100);
+}
+
+
+
 void saveP(arma::Mat<double> &P,int N, int n_total,int place, FILE *gplotpipe)
 {
     FILE *f=fopen("P.txt","w");
@@ -1302,6 +1473,37 @@ void saveP(arma::Mat<double> &P,int N, int n_total,int place, FILE *gplotpipe)
 	pclose(gplotpipe);
 }
 
+void saveS(arma::Mat<double> &S,int N, int n_stats_total)
+{
+    FILE *f=fopen("S.txt","w");
+    for (int i = 0; i < N; ++i)
+	{
+		for (int j = 0; j < n_stats_total; ++j)
+		{
+			if(j!=n_stats_total-1 && S(i,n_stats_total-1)>0.1)
+			{
+				fprintf(f, "%.15lf  ",(double)S(i,j)/S(i,n_stats_total-1));
+			}
+			
+			else
+			{
+				fprintf(f, "%.10lf  ",S(i,j));
+			}
+		}
+		fprintf(f, "\n");
+	}
+	fclose(f);
+    FILE *g=fopen("S_save.txt","w");
+    for (int i = 0; i < N; ++i)
+	{
+			for (int j = 0; j < n_stats_total; ++j)
+			{
+				fprintf(g, "%.15lf  ",S(i,j));
+			}
+			fprintf(g, "\n");
+	}
+	fclose(g);
+}
 int loadP(arma::Mat<double> &P,int N, int n_total)
 {
     FILE *f=fopen("P_save.txt","r");
@@ -1318,6 +1520,19 @@ int loadP(arma::Mat<double> &P,int N, int n_total)
     fscanf(fp, "%d",&place);
     fclose(fp);
     return(place);
+}
+
+void loadS(arma::Mat<double> &S,int N, int n_total)
+{
+    FILE *f=fopen("S_save.txt","r");
+    for (int i = 0; i < N; ++i)
+	{
+			for (int j = 0; j < n_total; ++j)
+			{
+				fscanf(f, "%lf",&S(i,j));
+			}
+	}
+    fclose(f);
 }
 
 int main()
@@ -1375,14 +1590,23 @@ int main()
     }
 
     int n_total=14;
+    int n_stats_total=6;//numero de capa, osciladores en capa, conexiones siguientes, Amplitud, drift,iteraciones
     arma::Mat<double> P(N*N,n_total);
     arma::Mat<double> T(N,N+1);
+    arma::Mat<double> S(N,n_stats_total);
     std::vector<int> Caps(N);
     P.zeros();
+    S.zeros();
+    for (int i = 0; i < N; ++i)
+    {
+    	S(i,0)=i;
+    }
+
     int place=0;
     if(casoP==1)
     {
     	place=loadP(P,N,n_total);
+    	loadS(S,N,n_stats_total);
     	if(place>=loop)
     	{
     		printf("place: %d >= %d\n",place,loop );
@@ -1415,8 +1639,10 @@ int main()
     	solve_b(N,T_t,caso2,rng,dt_b); //el 0 no carga condiciones iniciales
     	getT_c(N,T_t,StartPoint_c,rng,T,i);
     	Tproperties(P,N,T,Caps);
+    	Sproperties(S,N,n_stats_total,Caps,T_t,dt_b,T);
     	printf("loop #%d\n",loop );
     	saveP(P,N,n_total,i+1,gplotpipe);
+    	saveS(S,N,n_stats_total);
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
