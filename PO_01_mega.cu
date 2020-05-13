@@ -600,7 +600,7 @@ void fillFw_b(std::vector<double> &Fw,int N,boost::mt19937 &rng,int caso)
 		{
 			if(i==0)
 			{
-				fprintf(w, "%lf  ", 10.0);
+				fprintf(w, "%lf  ", 1000.0);
 			}
 			else
 			{
@@ -748,7 +748,7 @@ void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt)
 
 void generateKdist(int N,boost::mt19937 &rng, std::vector<int> &K_dist)
 {
-    boost::uniform_int<> unif( 4, 4);//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::uniform_int<> unif( 99, 99);//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_int<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
     boost::uniform_real<> unif2( 0, 1 );//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen2( rng , unif2 );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
