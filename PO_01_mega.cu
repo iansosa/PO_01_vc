@@ -600,7 +600,7 @@ void fillFw_b(std::vector<double> &Fw,int N,boost::mt19937 &rng,int caso)
 		{
 			if(i==0)
 			{
-				fprintf(w, "%lf  ", 1000.0);
+				fprintf(w, "%lf  ", 5000.0);
 			}
 			else
 			{
