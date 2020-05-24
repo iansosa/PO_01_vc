@@ -1207,6 +1207,7 @@ void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int
 	double j_i_out;
 	double j_i_prev;
 	double j_i_next;
+	double j_i_current;
 	for (int i = 0; i < N; ++i)
 	{
 		N_i=0;
@@ -1217,6 +1218,7 @@ void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int
 		j_i_out=0;
 		j_i_prev=0;
 		j_i_next=0;
+		j_i_current=0;
 		for (int j = 0; j < N; ++j)
 		{
 			if(Caps[j]==Caps[i]-1)
@@ -1227,6 +1229,11 @@ void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int
 			if(Caps[j]==Caps[i]+1)
 			{
 				j_i_next=j_i_next+T(i,j);
+			}
+
+			if(Caps[j]==Caps[i])
+			{
+				j_i_current=j_i_current+T(i,j);
 			}
 
 			if(T(i,j)>0.00000000000001)
@@ -1256,8 +1263,9 @@ void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int
 		P(i+N*Caps[i],9)=P(i+N*Caps[i],9)+T(i,N);
 		P(i+N*Caps[i],10)=P(i+N*Caps[i],10)+j_i_prev;
 		P(i+N*Caps[i],11)=P(i+N*Caps[i],11)+j_i_next;
-		P(i+N*Caps[i],12)=P(i+N*Caps[i],12)+1;
-		P(i+N*Caps[i],13)=Caps[i];
+		P(i+N*Caps[i],12)=P(i+N*Caps[i],12)+j_i_current;
+		P(i+N*Caps[i],13)=P(i+N*Caps[i],13)+1;
+		P(i+N*Caps[i],14)=Caps[i];
 	}
 }
 
@@ -1480,7 +1488,7 @@ void saveS(arma::Mat<double> &S,int N, int n_stats_total)
 	{
 		for (int j = 0; j < n_stats_total; ++j)
 		{
-			if(j!=n_stats_total-1 && S(i,n_stats_total-1)>0.1)
+			if(j!=n_stats_total-1 && S(i,n_stats_total-1)>0.1 && j!=0)
 			{
 				fprintf(f, "%.15lf  ",(double)S(i,j)/S(i,n_stats_total-1));
 			}
@@ -1589,7 +1597,7 @@ int main()
     	loop=1;
     }
 
-    int n_total=14;
+    int n_total=15;
     int n_stats_total=6;//numero de capa, osciladores en capa, conexiones siguientes, Amplitud, drift,iteraciones
     arma::Mat<double> P(N*N,n_total);
     arma::Mat<double> T(N,N+1);
