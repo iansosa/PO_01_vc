@@ -1477,7 +1477,7 @@ void saveP(arma::Mat<double> &P,int N, int n_total,int place, FILE *gplotpipe)
 	FILE *fp=fopen("save_place.txt","w");
 	fprintf(fp, "%d\n",place);
 	fclose(fp);
-	fprintf(gplotpipe, "splot 'P.txt' u 1:(log($12)):14 w p palette pt 7 ps 0.5 \n" );
+	fprintf(gplotpipe, "splot 'P.txt' u 1:(log($12)):15 w p palette pt 7 ps 0.5 \n" );
 	pclose(gplotpipe);
 }
 
