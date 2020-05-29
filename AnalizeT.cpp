@@ -13,6 +13,80 @@
 #include <boost/numeric/odeint.hpp>
 #include <boost/random.hpp>
 
+int checkitera_T_forward(std::vector<int> &H,int N,int j,arma::Mat<double> &T)
+{
+	if(H[j]==1)
+	{
+		return 1;
+	}
+	H[j]=1;
+	for (int k = 0; k < N; ++k)
+	{
+		if(T(j,k)<-0.00000000000001)
+		{
+			//printf("asd %d  %d\n",j,k);
+			return checkitera_T_forward(H,N,k,T);
+
+		}
+	}
+	return 0;
+}
+
+int checkitera_T_backwards(std::vector<int> &H,int N,int j,arma::Mat<double> &T)
+{
+	if(H[j]==1)
+	{
+		return 1;
+	}
+	H[j]=1;
+	for (int k = 0; k < N; ++k)
+	{
+		if(T(j,k)>0.00000000000001)
+		{
+			//printf("asd %d  %d\n",j,k);
+			return checkitera_T_backwards(H,N,k,T);
+
+		}
+	}
+	return 0;
+}
+
+int check_T(arma::Mat<double> &T,int N,int start,int caso)
+{
+	std::vector<int> H(N);
+	std::fill(H.begin(), H.end(), 0);
+
+	if(caso==-1)
+	{
+		return checkitera_T_backwards(H,N,start,T);
+	}
+	if(caso==1)
+	{
+		return checkitera_T_forward(H,N,start,T);
+	}
+	printf("wrong caso\n");
+	return 0;
+	
+}
+
+int checkforcicle(arma::Mat<double> &T,int N)
+{
+	for (int i = 0; i < N; ++i)
+	{
+		if(check_T(T,N,i,-1)==1)
+		{
+			printf("%d tiene ciclo (backwards)!!\n",i);
+			return -1;
+		}
+		if(check_T(T,N,i,1)==1)
+		{
+			printf("%d tiene ciclo (forward)!!\n",i);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void loadT(int N,arma::Mat<double> &T,FILE *f)
 {
 	for (int i = 0; i < N; ++i)
@@ -110,6 +184,7 @@ int main()
 
     std::vector<double> S(N_stats);
 	std::fill(S.begin(), S.end(), 0);
+	int cicle=0;
 
     for (int i = 0; i <= total; ++i)
     {
@@ -117,7 +192,16 @@ int main()
 		f=fopen(savename,"r");
 		loadT(N,T,f);
 		Stats(N,k_max,N_stats,T,S);
+		if(checkforcicle(T,N)!=0)
+		{
+			printf("hay ciclo en T_%d!!\n",i);
+			cicle=1;
+		}
 		fclose(f);
+    }
+    if(cicle==0)
+    {
+    	printf("no hay ciclo\n");
     }
     for (int i = 0; i < N_stats; ++i)
     {
