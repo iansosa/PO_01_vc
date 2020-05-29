@@ -337,7 +337,7 @@ void itera_c(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, doubl
 		for (int j = 0; j < N+1; ++j)
 		{
 			T(i,j)=flux_aux[i+N*j];
-			fprintf(g,"%.10lf	  ",flux_aux[i+N*j]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
+			fprintf(g,"%.15lf	  ",flux_aux[i+N*j]); //1 posicion. 2 momento. 3 energia potencial. 4 energia cinetica. 5 energia total
 		}
 		if(flux_aux[i+N*N]>0)
 		{
@@ -345,6 +345,7 @@ void itera_c(arma::Mat<double> &A,std::vector<double> &G,int N,double T_t, doubl
 		}
 		fprintf(g, "\n");
 	}
+	fclose(g);
 	printf("factor %lf!\n",T_t/dt);
 }
 
@@ -542,6 +543,7 @@ void fillG_b(std::vector<double> &G,int N,boost::mt19937 &rng,int caso)
 		}
 		fclose(w);
 		FILE *r= fopen("Gi.txt", "r");
+		G[0]=2.5;
 		for (int i = 0; i < N; ++i)
 		{
 			fscanf(r, "%lf", &G[i]);
@@ -729,6 +731,8 @@ void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt)
 	fillW_b(Fw,N,rng,load);
 	FILE *c=fopen("save.txt","w");
 	fclose(c);
+	//std::shuffle(std::begin(G), std::end(G), e);
+	//G[0]=2.5;
 ////////////////////////////////////////////////////////////////////////////
 	int number_of_partitions=1+(int)((double)(T_t/dt)*2*N/10000000);
 	printf("%d\n",number_of_partitions );
@@ -811,6 +815,133 @@ int check_a(arma::Mat<int> &K,int N)
 		}
 	}
 	return 1;
+}
+
+int fillK_a_arbol(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
+{
+    boost::uniform_int<> unif( 1, N);//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::variate_generator< boost::mt19937&, boost::uniform_int<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
+    boost::uniform_real<> unif2( 0, 1 );//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen2( rng , unif2 );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
+    FILE *f;
+    std::vector<int> K_dist(N);
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine e(seed);
+
+    int stubs_sum=1;
+
+    if(caso==0)
+    {
+    	f=fopen("K_dist","r");
+		for (int i = 0; i < N; ++i)
+		{
+			fscanf(f, "%d", &K_dist[i]);
+		}
+		fclose(f);
+    }
+    if(caso==1)
+    {
+    	generateKdist(N,rng,K_dist);
+    }
+
+    for (int i = 0; i < N; ++i)
+    {
+    	for (int j = 0; j < N; ++j)
+    	{
+    		K(i,j)=0;
+    		if(i==j)
+    		{
+    			K(i,j)=1;
+    		}
+    	}
+    }
+	std::shuffle(std::begin(K_dist), std::end(K_dist), e);
+    int current;
+    int suitables;
+    std::vector<int> suitables_list(N);
+    std::vector<int> touched_list(N);
+    std::vector<int> border_list(N);
+    std::vector<int> choose_border_list(N);
+	std::fill(touched_list.begin(), touched_list.end(), 0);
+	std::fill(border_list.begin(), border_list.end(), 0);
+	std::fill(choose_border_list.begin(), choose_border_list.end(), 0);
+	border_list[0]=1;
+    int maxstubs=0;
+    for (int l = 0; l < N; ++l)
+	{
+		maxstubs=0;
+		for (int i = 0; i < N; ++i)
+		{
+			if(K_dist[i]>maxstubs)
+			{
+				maxstubs=K_dist[i];
+			}
+		}
+		if(maxstubs==0)
+		{
+			return 1;
+		}
+		int i=0;
+		int ever=-1;
+		std::fill(choose_border_list.begin(), choose_border_list.end(), 0);
+		for (int j = 0; j < N; ++j)
+		{
+			if(border_list[j]==1)
+			{
+				choose_border_list[i]=j;
+				i=i+1;
+				ever=1;
+			}
+		}
+		i=choose_border_list[(int)(i*gen2())];
+		if(ever==-1)
+		{
+			return 1;
+		}
+		//printf("%d\n", i);
+		std::fill(suitables_list.begin(), suitables_list.end(), 0);
+		while(K_dist[i]>0)
+		{
+			suitables=0;
+			touched_list[i]=1;
+			border_list[i]=1;
+			for (int j = 0; j < N; ++j)
+			{
+				if(j!=i && touched_list[j]==0 && K(i,j)==0 && border_list[j]==0)
+				{
+					suitables_list[suitables]=j;
+					suitables=suitables+1;
+				}
+			}
+			if(suitables==0)
+			{
+				return 1;
+			}
+			current=suitables_list[(int)(suitables*gen2())];
+			//printf("%d   %d   %d   %d    %d\n",i,K_dist[i],current,K_dist[current], K(i,current) );
+			if(K_dist[i]>0 && K_dist[current]>0 && K(i,current)==0 && i!=current)
+			{
+				K(i,current)=1;
+				K(current,i)=1;
+				K_dist[i]=K_dist[i]-1;
+				K_dist[current]=K_dist[current]-1;
+				touched_list[current]=1;
+				if(K_dist[i]==0)
+				{
+					border_list[i]=0;
+				}
+				if(K_dist[current]>0)
+				{
+					border_list[current]=1;
+				}
+
+			}
+
+		}
+	}
+	return 1;
+/////////////
+///////////
 }
 
 int fillK_a(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
@@ -907,7 +1038,7 @@ int fillK_a(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
 ///////////
 }
 
-void getA_a(boost::mt19937 &rng,int N,int caso2,int place)
+void getA_a(boost::mt19937 &rng,int N,int caso2,int place, int arbol)
 {
     const rlim_t kStackSize = 100 * 1024 * 1024;   // min stack size = 16 MB
     struct rlimit rl;
@@ -945,10 +1076,21 @@ void getA_a(boost::mt19937 &rng,int N,int caso2,int place)
     	f2=fopen(savename2,"w");
 		while(1==1)
 		{
-			if(fillK_a(K,N,rng,caso2)==0)
+			if(arbol==0)
 			{
-				printf("fail\n");
-				continue;
+				if(fillK_a(K,N,rng,caso2)==0)
+				{
+					printf("fail\n");
+					continue;
+				}
+			}
+			if(arbol==1)
+			{
+				if(fillK_a_arbol(K,N,rng,caso2)==0)
+				{
+					printf("fail\n");
+					continue;
+				}
 			}
 			//printf("succes\n");
 			if(check_a(K,N)==1)
@@ -1579,6 +1721,17 @@ int main()
     printf("Generate Kdist? (0 NO:: 1 YES):  ");
     std::cin >>caso;
 
+    int arbol;
+    printf("Arbol? (0 NO:: 1 YES):  ");
+    std::cin >>arbol;
+
+    int cnst_A=0;
+    if(arbol==1)
+    {
+    	printf("Const A? (0 NO:: 1 YES):  ");
+    	std::cin >>cnst_A;
+    }
+
     int casoP;
 
 
@@ -1632,7 +1785,11 @@ int main()
     	fprintf(gplotpipe, "set view map\n" );
         fprintf(gplotpipe, "set output 'Jnext_%d.png'\n",i );
     	printf("loop (%d/%d)\n",i+1,loop );
-    	getA_a(rng,N,caso,i);
+    	if(cnst_A==0)
+    	{
+    		getA_a(rng,N,caso,i,arbol);
+    	}
+
 		changeA_ca(N,K,kappa,Caps,i);
 
 		int caso2;
