@@ -154,7 +154,7 @@ void calcd(int N, double K,double gamma_med, int N_capas,std::vector<std::comple
 
 void printWnext(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med)
 {
-	double dx=(3.5-1.5)/1000.0;
+	double dx=(35-15)/1000.0;
 	double x;
 	double delta_gamma;
 	double Wcurrent;
@@ -169,7 +169,7 @@ void printWnext(int N, double K,int N_capas,std::vector<double> &capas,std::vect
 
 void printWprev(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med)
 {
-	double dx=(3.5-1.5)/1000.0;
+	double dx=(35-15)/1000.0;
 	double x;
 	double delta_gamma;
 	double Wcurrent;
@@ -184,7 +184,7 @@ void printWprev(int N, double K,int N_capas,std::vector<double> &capas,std::vect
 
 void printWgamma(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med)
 {
-	double dx=(3.5-1.5)/1000.0;
+	double dx=(35-15)/1000.0;
 	double x;
 	double delta_gamma;
 	double Wcurrent;
@@ -199,7 +199,7 @@ void printWgamma(int N, double K,int N_capas,std::vector<double> &capas,std::vec
 
 void printWcurrent(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med)
 {
-	double dx=(3.5-1.5)/1000.0;
+	double dx=(35-15)/1000.0;
 	double x;
 	double delta_gamma;
 	double Wcurrent;
