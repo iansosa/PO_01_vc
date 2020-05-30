@@ -44,7 +44,7 @@ void calcproperties(double *flux_aux_d,double *x_vec_lin_d, double *A_lin_d, dou
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			for (int l = 0; l < N; ++l)
 			{
-				atomicAddD(&flux_aux_d[place+N*l],A_lin_d[l+N*place]*sin(x_vec_lin_d[0+i*2+steps*2*l]-x_vec_lin_d[0+i*2+steps*2*place])*0.5*(x_vec_lin_d[1+i*2+steps*2*place]/N+x_vec_lin_d[1+i*2+steps*2*l]/N));
+				atomicAddD(&flux_aux_d[place+N*l],A_lin_d[l+N*place]*sin(x_vec_lin_d[0+i*2+steps*2*l]-x_vec_lin_d[0+i*2+steps*2*place])/**0.5*/*(x_vec_lin_d[1+i*2+steps*2*place]/N/*+x_vec_lin_d[1+i*2+steps*2*l]/N*/));
 			}
 			atomicAddD(&flux_aux_d[place+N*N],-G_lin_d[place]*(x_vec_lin_d[1+i*2+steps*2*place]*x_vec_lin_d[1+i*2+steps*2*place]));
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
