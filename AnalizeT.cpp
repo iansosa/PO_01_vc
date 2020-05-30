@@ -69,22 +69,23 @@ int check_T(arma::Mat<double> &T,int N,int start,int caso)
 	
 }
 
-int checkforcicle(arma::Mat<double> &T,int N)
+int checkforcicle(arma::Mat<double> &T,int N,int promedio)
 {
+	int caso;
 	for (int i = 0; i < N; ++i)
 	{
 		if(check_T(T,N,i,-1)==1)
 		{
-			printf("%d tiene ciclo (backwards)!!\n",i);
-			return -1;
+			printf("%d tiene ciclo (backwards) en T_%d!!\n",i,promedio);
+			caso=-1;
 		}
 		if(check_T(T,N,i,1)==1)
 		{
-			printf("%d tiene ciclo (forward)!!\n",i);
-			return 1;
+			printf("%d tiene ciclo (forward) en T_%d!!\n",i,promedio);
+			caso=1;
 		}
 	}
-	return 0;
+	return caso;
 }
 
 void loadT(int N,arma::Mat<double> &T,FILE *f)
@@ -192,9 +193,9 @@ int main()
 		f=fopen(savename,"r");
 		loadT(N,T,f);
 		Stats(N,k_max,N_stats,T,S);
-		if(checkforcicle(T,N)!=0)
+		if(checkforcicle(T,N,i)!=0)
 		{
-			printf("hay ciclo en T_%d!!\n",i);
+			//printf("hay ciclo en T_%d!!\n",i);
 			cicle=1;
 		}
 		fclose(f);
