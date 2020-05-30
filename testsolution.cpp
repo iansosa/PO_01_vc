@@ -262,13 +262,13 @@ int main()
     printf("<gamma>:  ");
     std::cin >>gamma_med;
 
-    double g_min;
+    double gamma_min;
     printf("gamma_min:  ");
-    std::cin >>g_min;
+    std::cin >>gamma_min;
 
-    double g_max;
+    double gamma_max;
     printf("gamma_max:  ");
-    std::cin >>g_max;
+    std::cin >>gamma_max;
 
 	std::vector<std::complex<double>> D(N_capas); 
 	calcD(N,K,gamma_med,N_capas,D,capas,capas_next);
