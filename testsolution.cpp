@@ -152,60 +152,60 @@ void calcd(int N, double K,double gamma_med, int N_capas,std::vector<std::comple
 
 }
 
-void printWnext(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med)
+void printWnext(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med,double gamma_min,double gamma_max)
 {
-	double dx=(35-15)/1000.0;
+	double dx=(gamma_max-gamma_min)/1000.0;
 	double x;
 	double delta_gamma;
 	double Wcurrent;
 	for (int i = 0; i < 1000; ++i)
 	{
-		x=i*dx+1.5;
+		x=i*dx+gamma_min;
 		delta_gamma=x-gamma_med;
 		Wcurrent=delta_gamma*capas_next[icurrent]*w*w/g+delta_gamma*0.5*calccosa_next(N,K,N_capas,capas,capas_next,icurrent+1,A,gamma_med,g,0,x)/(pow(K*g/N-1,2)+pow(x,2));
 		fprintf(f_prev, "%lf   %.15lf\n",x,W_med+Wcurrent/capas[icurrent]);
 	}
 }
 
-void printWprev(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med)
+void printWprev(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med,double gamma_min,double gamma_max)
 {
-	double dx=(35-15)/1000.0;
+	double dx=(gamma_max-gamma_min)/1000.0;
 	double x;
 	double delta_gamma;
 	double Wcurrent;
 	for (int i = 0; i < 1000; ++i)
 	{
-		x=i*dx+1.5;
+		x=i*dx+gamma_min;
 		delta_gamma=x-gamma_med;
 		Wcurrent=delta_gamma*capas_next[icurrent-1]*w*w/g-delta_gamma*0.5*calccosa_next(N,K,N_capas,capas,capas_next,icurrent,A,gamma_med,g,1,x)/(pow(K*g/N-1,2)+pow(x,2));
 		fprintf(f_prev, "%lf   %.15lf\n",x,W_med+Wcurrent/capas[icurrent]);
 	}
 }
 
-void printWgamma(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med)
+void printWgamma(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med,double gamma_min,double gamma_max)
 {
-	double dx=(35-15)/1000.0;
+	double dx=(gamma_max-gamma_min)/1000.0;
 	double x;
 	double delta_gamma;
 	double Wcurrent;
 	for (int i = 0; i < 1000; ++i)
 	{
-		x=i*dx+1.5;
+		x=i*dx+gamma_min;
 		delta_gamma=x-gamma_med;
 		Wcurrent=-delta_gamma*capas[icurrent]*w*w-delta_gamma*capas[icurrent]*0.5*pow(A[icurrent],2)+delta_gamma*0.5*capas[icurrent]*pow(A[icurrent],2)*x*(gamma_med+x)/(pow(K*g/N-1,2)+pow(x,2));
 		fprintf(f_prev, "%lf   %.15lf\n",x,W_med+Wcurrent/capas[icurrent]);
 	}
 }
 
-void printWcurrent(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med)
+void printWcurrent(int N, double K,int N_capas,std::vector<double> &capas,std::vector<double> &capas_next,int icurrent,std::vector<double> &A,double gamma_med, double g,FILE *f_prev,double w,double W_med,double gamma_min,double gamma_max)
 {
-	double dx=(35-15)/1000.0;
+	double dx=(gamma_max-gamma_min)/1000.0;
 	double x;
 	double delta_gamma;
 	double Wcurrent;
 	for (int i = 0; i < 1000; ++i)
 	{
-		x=i*dx+1.5;
+		x=i*dx+gamma_min;
 		delta_gamma=x-gamma_med;
 		Wcurrent=delta_gamma*(g*capas[icurrent]-capas_next[icurrent]-capas_next[icurrent-1])*w*w/g+delta_gamma*0.5*pow(A[icurrent],2)*(g*capas[icurrent]-capas_next[icurrent]-capas_next[icurrent-1])*(K*g/N-1)*(K/N)/(pow(K*g/N-1,2)+pow(x,2));
 		fprintf(f_prev, "%lf   %.15lf\n",x,W_med+Wcurrent/capas[icurrent]);
@@ -242,6 +242,8 @@ int main()
     printf("g (grado medio):  ");
     std::cin >>g;
 
+
+
     std::vector<double> capas_current(N_capas);
 	for (int i = 0; i < N_capas; ++i)
 	{
@@ -259,6 +261,14 @@ int main()
     double gamma_med;
     printf("<gamma>:  ");
     std::cin >>gamma_med;
+
+    double g_min;
+    printf("gamma_min:  ");
+    std::cin >>g_min;
+
+    double g_max;
+    printf("gamma_max:  ");
+    std::cin >>g_max;
 
 	std::vector<std::complex<double>> D(N_capas); 
 	calcD(N,K,gamma_med,N_capas,D,capas,capas_next);
@@ -286,22 +296,22 @@ int main()
 	{
     	sprintf(savename_Wprev,"test_Wprev_capa%d.txt",i);
 		f_prev=fopen(savename_Wprev, "w");
-		printWprev(N,K,N_capas,capas,capas_next,i,A,gamma_med,g,f_prev,w,W_prev[i]);
+		printWprev(N,K,N_capas,capas,capas_next,i,A,gamma_med,g,f_prev,w,W_prev[i],gamma_min,gamma_max);
 		fclose(f_prev);
 
     	sprintf(savename_Wcurrent,"test_Wcurrent_capa%d.txt",i);
 		f_current=fopen(savename_Wcurrent, "w");
-		printWcurrent(N,K,N_capas,capas,capas_next,i,A,gamma_med,g,f_current,w,0);
+		printWcurrent(N,K,N_capas,capas,capas_next,i,A,gamma_med,g,f_current,w,0,gamma_min,gamma_max);
 		fclose(f_current);
 
     	sprintf(savename_Wnext,"test_Wnext_capa%d.txt",i);
 		f_next=fopen(savename_Wnext, "w");
-		printWnext(N,K,N_capas,capas,capas_next,i,A,gamma_med,g,f_next,w,W_next[i]);
+		printWnext(N,K,N_capas,capas,capas_next,i,A,gamma_med,g,f_next,w,W_next[i],gamma_min,gamma_max);
 		fclose(f_next);
 
     	sprintf(savename_Wgamma,"test_Wgamma_capa%d.txt",i);
 		f_gamma=fopen(savename_Wgamma, "w");
-		printWgamma(N,K,N_capas,capas,capas_next,i,A,gamma_med,g,f_gamma,w,W_gamma[i]);
+		printWgamma(N,K,N_capas,capas,capas_next,i,A,gamma_med,g,f_gamma,w,W_gamma[i],gamma_min,gamma_max);
 		fclose(f_gamma);
 	}
 
