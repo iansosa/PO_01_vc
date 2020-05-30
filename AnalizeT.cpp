@@ -71,7 +71,7 @@ int check_T(arma::Mat<double> &T,int N,int start,int caso)
 
 int checkforcicle(arma::Mat<double> &T,int N,int promedio)
 {
-	int caso;
+	int caso=0;
 	for (int i = 0; i < N; ++i)
 	{
 		if(check_T(T,N,i,-1)==1)
