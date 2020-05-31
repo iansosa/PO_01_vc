@@ -119,7 +119,7 @@ void fillA_c(arma::Mat<double> &A,int N,boost::mt19937 &rng,int caso)
 void fillG_c(std::vector<double> &G,int N,boost::mt19937 &rng,int caso)
 {
 
-    boost::normal_distribution<> unif(2.5, 0.2);//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::normal_distribution<> unif(5, 0.4);//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::normal_distribution<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
 
     if(caso==0)
@@ -531,7 +531,7 @@ void fillA_b(arma::Mat<double> &A,int N,boost::mt19937 &rng,int caso)
 void fillG_b(std::vector<double> &G,int N,boost::mt19937 &rng,int caso)
 {
 
-    boost::normal_distribution<> unif(2.5, 0.2 );//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::normal_distribution<> unif(5, 0.4 );//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::normal_distribution<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
 
     if(caso==0)
