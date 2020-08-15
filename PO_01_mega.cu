@@ -751,7 +751,7 @@ void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt)
 
 void generateKdist(int N,boost::mt19937 &rng, std::vector<int> &K_dist)
 {
-    boost::uniform_int<> unif( 5, 5);//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::uniform_int<> unif( 1, 3);//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_int<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
     boost::uniform_real<> unif2( 0, 1 );//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen2( rng , unif2 );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
@@ -854,20 +854,81 @@ int fillK_a_arbol(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
     		}
     	}
     }
+    std::vector<int> random(N);
+    for (int i = 0; i < N; ++i)
+    {
+    	random[i]=i;
+    }
 	std::shuffle(std::begin(K_dist), std::end(K_dist), e);
-    int current;
-    int suitables;
+	while(K_dist[0]==1)
+	{
+		std::shuffle(std::begin(K_dist), std::end(K_dist), e);
+	}
+//    int current;
+//    int suitables;
     std::vector<int> suitables_list(N);
     std::vector<int> touched_list(N);
     std::vector<int> border_list(N);
     std::vector<int> choose_border_list(N);
+	std::fill(suitables_list.begin(), suitables_list.end(), 1);
 	std::fill(touched_list.begin(), touched_list.end(), 0);
 	std::fill(border_list.begin(), border_list.end(), 0);
 	std::fill(choose_border_list.begin(), choose_border_list.end(), 0);
+	suitables_list[0]=0;
 	border_list[0]=1;
     int maxstubs=0;
+    int counter=1;
+
+    while(1==1)
+    {
+    	for (int i = 0; i < N; ++i)
+    	{
+    		if(border_list[i]==1)
+    		{
+    			std::shuffle(std::begin(random), std::end(random), e);
+    			if(K_dist[i]==0)
+    			{
+    				continue;
+    			}
+    			for (int j = 0; j < N; ++j)
+    			{
+    				if(K_dist[i]==0)
+    				{
+    					break;
+    				}
+    				if(border_list[i]==1 && K_dist[i]>0 && suitables_list[random[j]]==1 && i!=random[j] && K_dist[random[j]]>0 && touched_list[random[j]]==0 && border_list[random[j]]==0)    				
+    				{
+    					suitables_list[random[j]]=0;
+    					counter++;
+    					K(i,random[j])=1;
+    					K(random[j],i)=1;
+    					K_dist[i]=K_dist[i]-1;
+    					K_dist[random[j]]=K_dist[random[j]]-1;
+    					touched_list[random[j]]=1;
+    				}
+    			}
+    		}
+    	}
+		int r=0;
+    	for (int i = 0; i < N; ++i)
+    	{
+    		border_list[i]=touched_list[i];
+    		touched_list[i]=0;
+    		r=r+border_list[i];
+    	}
+    	if(counter==N)
+    	{
+    		return 1;
+    	}
+    	if(r==0)
+    	{
+    		return 0;
+    	}
+    }
+/*
     for (int l = 0; l < N; ++l)
 	{
+
 		maxstubs=0;
 		for (int i = 0; i < N; ++i)
 		{
@@ -941,6 +1002,7 @@ int fillK_a_arbol(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
 	return 1;
 /////////////
 ///////////
+*/
 }
 
 int fillK_a(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
