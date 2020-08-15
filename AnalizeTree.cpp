@@ -75,16 +75,18 @@ int mini_checktree(arma::Mat<double> &A,int N,int prev,int id,int &ntotal,int lo
 	
 }
 
-void checktree(arma::Mat<double> &A,int N,int id,int &ntotal, int &longest)
+double checktree(arma::Mat<double> &A,int N,int id,int &ntotal, int &longest)
 {
 	ntotal=1;
 	longest=1;
 	int size;
+	double snippet;
 	for (int i = 1; i < N; ++i)
 	{
 		//printf("A(%d,%d)=%lf checktree\n",id,i,A(id,i) );
 		if(A(i,id)>0.0000001 && i!=id)
 		{
+			
 			//printf("hola\n");
 			size=mini_checktree(A,N,id,i,ntotal,1);
 			if(longest<size)
@@ -93,6 +95,8 @@ void checktree(arma::Mat<double> &A,int N,int id,int &ntotal, int &longest)
 			}
 		}
 	}
+	snippet=A(0,id);
+	return snippet;
 }
 
 void loadA(int N,arma::Mat<double> &A,FILE *f)
@@ -111,6 +115,27 @@ void loadA(int N,arma::Mat<double> &A,FILE *f)
 				A(i,j)=A(j,i);
 			}
 		}
+}
+
+void PrintA(arma::Mat<double> &A,int N,double snippet, int one, int two)
+{
+    	FILE *w= fopen("Ai.txt", "w");
+    	for (int i = 0; i < N; ++i)
+		{
+			for (int j = 0; j <= i; ++j)
+			{
+				if(i==one && j==two)
+				{
+					fprintf(w, "%lf  ",snippet);
+				}
+				else
+				{
+					fprintf(w, "%lf  ",A(i,j));
+				}
+				
+			}
+		}
+		fclose(w);
 }
 
 int main()
@@ -146,6 +171,7 @@ int main()
 	f=fopen(savename,"r");
 	loadA(N,A,f);
 
+	double valA;
 while(1==1)
 {
 
@@ -155,7 +181,8 @@ while(1==1)
 
     int ntotal;
     int longest;
-    checktree(A,N,oscid,ntotal,longest);
+    valA=checktree(A,N,oscid,ntotal,longest);
+    printf("valA=%lf\n",valA);
 
     printf("Ntotal=%d  Longest=%d\n", ntotal,longest);
 
@@ -170,6 +197,19 @@ while(1==1)
     }
 
 }
+    int editA=0;
+    printf("Edit A? (0 NO, 1 YES): ");
+    std::cin >>editA;
+
+    if(editA==1)
+    {
+    	int one;
+    	int two;
+    	printf("A(x,y): x>=y \n");
+    	std::cin >>one;
+    	std::cin >>two;
+    	PrintA(A,N,valA,one,two);
+    }
 
 	return 0;
 }
