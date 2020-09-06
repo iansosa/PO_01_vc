@@ -573,14 +573,15 @@ void fillA_b(arma::Mat<double> &A,int N,boost::mt19937 &rng,int caso)
 
 void fillG_b(std::vector<double> &G,int N,boost::mt19937 &rng,int caso)
 {
-
-    boost::normal_distribution<> unif(5, 0.4 );//la distribucion de probabilidad uniforme entre cero y 2pi
+	double mean=5;
+    boost::normal_distribution<> unif(mean, 0.4 );//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::normal_distribution<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
 
     if(caso==0)
     {
     	FILE *w= fopen("Gi.txt", "w");
-		for (int i = 0; i < N; ++i)
+    	fprintf(w, "%lf  ", mean);
+		for (int i = 1; i < N; ++i)
 		{
 			fprintf(w, "%lf  ", gen());
 		}
@@ -594,6 +595,21 @@ void fillG_b(std::vector<double> &G,int N,boost::mt19937 &rng,int caso)
 	}
 	if(caso==1)
 	{
+		FILE *r= fopen("Gi.txt", "r");
+		for (int i = 0; i < N; ++i)
+		{
+			fscanf(r, "%lf", &G[i]);
+		}
+		fclose(r);
+	}
+	if(caso==2)
+	{
+    	FILE *w= fopen("Gi.txt", "w");
+		for (int i = 0; i < N; ++i)
+		{
+			fprintf(w, "%lf  ", mean);
+		}
+		fclose(w);
 		FILE *r= fopen("Gi.txt", "r");
 		for (int i = 0; i < N; ++i)
 		{
@@ -758,7 +774,7 @@ void itera_b(double t_in, double t_fn,double dt,arma::Mat<double> &A,std::vector
 }
 
 
-void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt)
+void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt,int arbol)
 {
     using namespace std;
     arma::Mat<double> A(N,N);
@@ -767,7 +783,15 @@ void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt)
     vector<double> F(N);
     vector<double> Fw(N);
 	fillA_b(A,N,rng,1);
-	fillG_b(G,N,rng,load);
+	if(arbol==2)
+	{
+		fillG_b(G,N,rng,arbol);
+	}
+	else
+	{
+		fillG_b(G,N,rng,load);
+	}
+
 	fillI_b(I,N,rng,load);
 	fillFw_b(F,N,rng,load);
 	fillW_b(Fw,N,rng,load);
@@ -2174,7 +2198,7 @@ int main()
 		{
 			caso2=1;
 		}
-    	solve_b(N,T_t,caso2,rng,dt_b); //el 0 no carga condiciones iniciales
+    	solve_b(N,T_t,caso2,rng,dt_b,arbol); //el 0 no carga condiciones iniciales
     	getT_c(N,T_t,StartPoint_c,rng,T,i);
     	Tproperties(P,N,T,Caps,arbol,i,lenght2,lenght1,kdist_perfecttree);
     	Sproperties(S,N,n_stats_total,Caps,T_t,dt_b,T,arbol,i,lenght2,lenght1,kdist_perfecttree,N1,N2);
