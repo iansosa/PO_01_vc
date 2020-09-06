@@ -52,6 +52,49 @@ void calcproperties(double *flux_aux_d,double *x_vec_lin_d, double *A_lin_d, dou
 	}
 }
 
+int firstoff_perfecttree(int l1,int capa,int kdist_perfecttree,int tree_num)
+{
+	int ret;
+	int prev;
+	if(tree_num==1)
+	{
+		if(capa==1)
+		{
+			return 1;
+		}
+		ret=1;
+		prev=2;
+		for (int i = 2; i < capa; ++i)
+		{	
+			ret=ret*(kdist_perfecttree-1);
+			prev=prev+ret;
+		}
+	}
+	if(tree_num==2)
+	{
+		ret=1;
+		prev=2;
+		for (int i = 1; i < l1; ++i)
+		{	
+			ret=ret*(kdist_perfecttree-1);
+			prev=prev+ret;
+		}
+		ret=1;
+		if(capa==1)
+		{
+			return prev;
+		}
+		prev=prev+1;
+		for (int i = 2; i < capa; ++i)
+		{
+			ret=ret*(kdist_perfecttree-1);
+			prev=prev+ret;
+		}
+		
+	}
+	return prev;
+}
+
 
 void fillA_c(arma::Mat<double> &A,int N,boost::mt19937 &rng,int caso)
 {
@@ -749,7 +792,7 @@ void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void generateKdist(int N,boost::mt19937 &rng, std::vector<int> &K_dist)
+void generateKdist(int N,boost::mt19937 &rng, std::vector<int> &K_dist,int caso=0,int N1=0,int N2=0,int kdist_perfecttree=0,int l1=1, int l2=1)
 {
     boost::uniform_int<> unif( 1, 3);//la distribucion de probabilidad uniforme entre cero y 2pi
     boost::variate_generator< boost::mt19937&, boost::uniform_int<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
@@ -758,7 +801,6 @@ void generateKdist(int N,boost::mt19937 &rng, std::vector<int> &K_dist)
     FILE *f;
     int stubs_sum=1;
 
-    int caso=0;
     if(caso==0)
     {
     	while(stubs_sum%2==1)
@@ -774,6 +816,52 @@ void generateKdist(int N,boost::mt19937 &rng, std::vector<int> &K_dist)
     		fclose(f);
     		//printf("%d\n",stubs_sum );
     	}
+    }
+    int Nlast1=1;
+    int Nlast2=1;
+    if(caso==1)
+    {
+    		stubs_sum=0;
+    		f=fopen("K_dist","w");
+    		K_dist[0]=2;
+    		fprintf(f, "%d  ", K_dist[0]);
+    		for (int i = 1; i < l1; ++i)
+    		{
+    			Nlast1=Nlast1*(kdist_perfecttree-1);
+    		}
+    		for (int i = 1; i < 1+N1-Nlast1; ++i)
+    		{	
+    			K_dist[i]=kdist_perfecttree;
+    			stubs_sum=stubs_sum+K_dist[i];
+				fprintf(f, "%d  ", K_dist[i]);
+    		}
+    		for (int i = 1+N1-Nlast1; i < 1+N1; ++i)
+    		{	
+    			K_dist[i]=1;
+    			stubs_sum=stubs_sum+K_dist[i];
+				fprintf(f, "%d  ", K_dist[i]);
+    		}
+    		for (int i = 1; i < l2; ++i)
+    		{
+    			Nlast2=Nlast2*(kdist_perfecttree-1);
+    		}
+    		for (int i = 1+N1; i < 1+N1+N2-Nlast2; ++i)
+    		{	
+    			K_dist[i]=kdist_perfecttree;
+    			stubs_sum=stubs_sum+K_dist[i];
+				fprintf(f, "%d  ", K_dist[i]);
+    		}
+    		for (int i = 1+N1+N2-Nlast2; i < 1+N1+N2; ++i)
+    		{	
+    			K_dist[i]=1;
+    			stubs_sum=stubs_sum+K_dist[i];
+				fprintf(f, "%d  ", K_dist[i]);
+    		}
+    		fclose(f);
+    		if(stubs_sum%2==1)
+    		{
+    			printf("WRONG\n");
+    		}
     }
 }
 
@@ -925,84 +1013,127 @@ int fillK_a_arbol(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
     		return 0;
     	}
     }
-/*
-    for (int l = 0; l < N; ++l)
-	{
+}
 
-		maxstubs=0;
+int fillK_a_arbol_perfect(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso,int l1,int l2,int kdist_perfecttree,int N1,int N2,int place)
+{
+    boost::uniform_int<> unif( 1, N);//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::variate_generator< boost::mt19937&, boost::uniform_int<> > gen( rng , unif );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
+    boost::uniform_real<> unif2( 0, 1 );//la distribucion de probabilidad uniforme entre cero y 2pi
+    boost::variate_generator< boost::mt19937&, boost::uniform_real<> > gen2( rng , unif2 );//gen es una funcion que toma el engine y la distribucion y devuelve el numero random
+    FILE *f;
+    std::vector<int> K_dist(N);
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine e(seed);
+
+    int stubs_sum=1;
+
+    if(caso==0)
+    {
+    	f=fopen("K_dist","r");
 		for (int i = 0; i < N; ++i)
 		{
-			if(K_dist[i]>maxstubs)
-			{
-				maxstubs=K_dist[i];
-			}
+			fscanf(f, "%d", &K_dist[i]);
 		}
-		if(maxstubs==0)
-		{
-			return 1;
-		}
-		int i=0;
-		int ever=-1;
-		std::fill(choose_border_list.begin(), choose_border_list.end(), 0);
-		for (int j = 0; j < N; ++j)
-		{
-			if(border_list[j]==1)
-			{
-				choose_border_list[i]=j;
-				i=i+1;
-				ever=1;
-			}
-		}
-		i=choose_border_list[(int)(i*gen2())];
-		if(ever==-1)
-		{
-			return 1;
-		}
-		//printf("%d\n", i);
-		std::fill(suitables_list.begin(), suitables_list.end(), 0);
-		while(K_dist[i]>0)
-		{
-			suitables=0;
-			touched_list[i]=1;
-			border_list[i]=1;
-			for (int j = 0; j < N; ++j)
-			{
-				if(j!=i && touched_list[j]==0 && K(i,j)==0 && border_list[j]==0)
-				{
-					suitables_list[suitables]=j;
-					suitables=suitables+1;
-				}
-			}
-			if(suitables==0)
-			{
-				return 1;
-			}
-			current=suitables_list[(int)(suitables*gen2())];
-			//printf("%d   %d   %d   %d    %d\n",i,K_dist[i],current,K_dist[current], K(i,current) );
-			if(K_dist[i]>0 && K_dist[current]>0 && K(i,current)==0 && i!=current)
-			{
-				K(i,current)=1;
-				K(current,i)=1;
-				K_dist[i]=K_dist[i]-1;
-				K_dist[current]=K_dist[current]-1;
-				touched_list[current]=1;
-				if(K_dist[i]==0)
-				{
-					border_list[i]=0;
-				}
-				if(K_dist[current]>0)
-				{
-					border_list[current]=1;
-				}
+		fclose(f);
+    }
+    if(caso==1)
+    {
+    	generateKdist(N,rng,K_dist,1,N1,N2,kdist_perfecttree,l1,l2);
+    }
 
-			}
+    for (int i = 0; i < N; ++i)
+    {
+    	for (int j = 0; j < N; ++j)
+    	{
+    		K(i,j)=0;
+    		if(i==j)
+    		{
+    			K(i,j)=1;
+    		}
+    	}
+    }
+    std::vector<int> random(N);
+    for (int i = 0; i < N; ++i)
+    {
+    	random[i]=i;
+    }
+	std::shuffle(std::begin(random), std::end(random), e);
 
+	int connections=1;
+	int current=0;
+	int prev=1;
+	K(0,1)=1;
+	K(1,0)=1;
+	K_dist[0]=K_dist[0]-2;
+	K_dist[1]=K_dist[1]-1;
+	K(0,1+N1)=1;
+	K(1+N1,0)=1;
+	K_dist[1+N1]=K_dist[1+N1]-1;
+
+
+
+	for (int i = 0; i < l1-1; ++i)
+	{
+		//connections=connections*(kdist_perfecttree-1);
+		for (int j = 0; j < connections; ++j)
+		{
+			for (int k = 0; k < kdist_perfecttree-1; ++k)
+			{
+				K(prev+j,prev+connections+k+j*(kdist_perfecttree-1))=1;
+				K_dist[prev+j]=K_dist[prev+j]-1;
+				K(prev+connections+k+j*(kdist_perfecttree-1),prev+j)=1;
+				K_dist[prev+connections+k+j*(kdist_perfecttree-1)]=K_dist[prev+connections+k+j*(kdist_perfecttree-1)]-1;
+			}
+			
+		}
+		prev=prev+connections;
+		connections=connections*(kdist_perfecttree-1);
+	}
+
+	connections=1;
+	current=0;
+	prev=1+N1;
+
+	for (int i = 0; i < l2-1; ++i)
+	{
+		//connections=connections*(kdist_perfecttree-1);
+		for (int j = 0; j < connections; ++j)
+		{
+			for (int k = 0; k < kdist_perfecttree-1; ++k)
+			{
+				K(prev+j,prev+connections+k+j*(kdist_perfecttree-1))=1;
+				K_dist[prev+j]=K_dist[prev+j]-1;
+				K(prev+connections+k+j*(kdist_perfecttree-1),prev+j)=1;
+				K_dist[prev+connections+k+j*(kdist_perfecttree-1)]=K_dist[prev+connections+k+j*(kdist_perfecttree-1)]-1;
+			}
+			
+		}
+		prev=prev+connections;
+		connections=connections*(kdist_perfecttree-1);
+	}
+
+	int check=0;
+	for (int i = 0; i < N; ++i)
+	{
+		check=check+K_dist[i];
+		if(K_dist[i]!=0)
+		{
+			printf("WRONG2 i=%d; %d\n",i,K_dist[i]);
 		}
 	}
+	if(check != 0)
+	{
+		printf("WRONG2\n");
+	}
+	int current_capa2=place%(l2)+1;
+	int current_capa1=place/(l2)+1;
+	int oscilator1=firstoff_perfecttree(l1,current_capa1,kdist_perfecttree,1);
+	int oscilator2=firstoff_perfecttree(l1,current_capa2,kdist_perfecttree,2);
+	K(oscilator1,oscilator2)=1;
+	K(oscilator2,oscilator1)=1;
+	printf("place=%d ; [%d,%d]\n",place,oscilator1,oscilator2);
 	return 1;
-/////////////
-///////////
-*/
 }
 
 int fillK_a(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
@@ -1099,7 +1230,7 @@ int fillK_a(arma::Mat<int> &K,int N,boost::mt19937 &rng,int caso)
 ///////////
 }
 
-void getA_a(boost::mt19937 &rng,int N,int caso2,int place, int arbol)
+void getA_a(boost::mt19937 &rng,int N,int caso2,int place, int arbol,int l1,int l2,int kdist_perfecttree,int N1,int N2)
 {
     const rlim_t kStackSize = 100 * 1024 * 1024;   // min stack size = 16 MB
     struct rlimit rl;
@@ -1148,6 +1279,14 @@ void getA_a(boost::mt19937 &rng,int N,int caso2,int place, int arbol)
 			if(arbol==1)
 			{
 				if(fillK_a_arbol(K,N,rng,caso2)==0)
+				{
+					printf("fail\n");
+					continue;
+				}
+			}
+			if(arbol==2)
+			{
+				if(fillK_a_arbol_perfect(K,N,rng,caso2,l1,l2,kdist_perfecttree,N1,N2,place)==0)
 				{
 					printf("fail\n");
 					continue;
@@ -1384,7 +1523,7 @@ void changeA_ca(int N,double K, double kappa,std::vector<int> &Caps,int place)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int> &Caps)
+void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int> &Caps,int arbol=0,int place =0,int l2=1,int l1=1,int kdist_perfecttree=1)
 {
 	int max=0;
 	for( int i=0; i<N; ++i )
@@ -1470,9 +1609,24 @@ void Tproperties(arma::Mat<double> &P,int N,arma::Mat<double> &T,std::vector<int
 		P(i+N*Caps[i],13)=P(i+N*Caps[i],13)+1;
 		P(i+N*Caps[i],14)=Caps[i];
 	}
+	FILE *h;
+	if(arbol==2)
+	{
+		int current_capa2=place%(l2)+1;
+		int current_capa1=place/(l2)+1;
+		int oscilator1=firstoff_perfecttree(l1,current_capa1,kdist_perfecttree,1);
+		int oscilator2=firstoff_perfecttree(l1,current_capa2,kdist_perfecttree,2);
+		//printf("place=%d ; [%d,%d]\n",place,oscilator1,oscilator2);
+		if(place!=l1*l2)
+		{
+			h=fopen("Perf_tree_C.txt","a");
+			fprintf(h, "%d   %d   %.15lf   ",current_capa1,current_capa2,T(oscilator1,oscilator2));
+			fclose(h);
+		}
+	}
 }
 
-double wcalc(int N,double T_t, double dt,std::vector<int> &Caps,arma::Mat<double> &X)
+double wcalc(int N,double T_t, double dt,std::vector<int> &Caps,arma::Mat<double> &X,int l=0,int l2=1,int l1=1,int N1=1, int N2=2)
 {
 	int max=0;
 	double w_prime=0;
@@ -1487,18 +1641,55 @@ double wcalc(int N,double T_t, double dt,std::vector<int> &Caps,arma::Mat<double
 
 	}
 	int promedio=0;
-	for (int i = 0; i < N; ++i)
+	if(l==0)
 	{
-		if(Caps[i]==max)
+		for (int i = 0; i < N; ++i)
 		{
-			promedio=promedio+1;
-			w_prime_current=0;
-			for (int j = 0; j < totaltime; ++j)
+			if(Caps[i]==max)
 			{
-				w_prime_current=w_prime_current+X(j,2*i+1);
+				promedio=promedio+1;
+				w_prime_current=0;
+				for (int j = 0; j < totaltime; ++j)
+				{
+					w_prime_current=w_prime_current+X(j,2*i+1);
+				}
+				w_prime_current=(double)(w_prime_current/totaltime);
+				w_prime=w_prime+w_prime_current;
 			}
-			w_prime_current=(double)(w_prime_current/totaltime);
-			w_prime=w_prime+w_prime_current;
+		}
+	}
+	if(l==1)
+	{
+		for (int i = 0; i < N; ++i)
+		{
+			if(Caps[i]==l1 && i<= 1+N1)
+			{
+				promedio=promedio+1;
+				w_prime_current=0;
+				for (int j = 0; j < totaltime; ++j)
+				{
+					w_prime_current=w_prime_current+X(j,2*i+1);
+				}
+				w_prime_current=(double)(w_prime_current/totaltime);
+				w_prime=w_prime+w_prime_current;
+			}
+		}
+	}
+	if(l==2)
+	{
+		for (int i = 0; i < N; ++i)
+		{
+			if(Caps[i]==l2 && i> 1+N1)
+			{
+				promedio=promedio+1;
+				w_prime_current=0;
+				for (int j = 0; j < totaltime; ++j)
+				{
+					w_prime_current=w_prime_current+X(j,2*i+1);
+				}
+				w_prime_current=(double)(w_prime_current/totaltime);
+				w_prime=w_prime+w_prime_current;
+			}
 		}
 	}
 	return((double)(w_prime/promedio));
@@ -1589,7 +1780,7 @@ int Nmax(int N,std::vector<int> &Caps)
 	return(N_max);
 }
 
-void Sproperties(arma::Mat<double> &S,int N,int n_stats_total,std::vector<int> &Caps,double T_t, double dt,arma::Mat<double> &T)
+void Sproperties(arma::Mat<double> &S,int N,int n_stats_total,std::vector<int> &Caps,double T_t, double dt,arma::Mat<double> &T,int arbol=0,int place=0,int l2=1,int l1=1, int kdist_perfecttree=1,int N1=1,int N2=1)
 {
 	int totaltime=(int)100/dt;
 	double basura;
@@ -1639,7 +1830,30 @@ void Sproperties(arma::Mat<double> &S,int N,int n_stats_total,std::vector<int> &
 	w_teorico=0.5*w_teorico/N;
 	printf("w teorico=%.15lf\n",w_teorico);
 	printf("error=%.15lf\n",100*w_teorico/(S(0,4)/S(0,5))-100);
+	FILE *h;
+	if(arbol==2)
+	{
+		int current_capa2=place%(l2)+1;
+		int current_capa1=place/(l2)+1;
+		int oscilator1=firstoff_perfecttree(l1,current_capa1,kdist_perfecttree,1);
+		int oscilator2=firstoff_perfecttree(l1,current_capa2,kdist_perfecttree,2);
+		//printf("place=%d ; [%d,%d]\n",place,oscilator1,oscilator2);
+
+		if(place!=l1*l2)
+		{
+			h=fopen("Perf_tree_C.txt","a");
+			fprintf(h, "%.15lf\n",w);
+			fclose(h);
+		}
+		else
+		{
+			h=fopen("Perf_tree_C.txt","a");
+			fprintf(h, "%.15lf   %.15lf\n",wcalc(N,T_t,dt,Caps,X,1,l2,l1,N1,N2),wcalc(N,T_t,dt,Caps,X,2,l2,l1,N1,N2));
+			fclose(h);
+		}
 }
+	}
+
 
 
 
@@ -1682,6 +1896,8 @@ void saveP(arma::Mat<double> &P,int N, int n_total,int place, FILE *gplotpipe)
 	fclose(fp);
 	fprintf(gplotpipe, "splot 'P.txt' u 1:(log($12)):15 w p palette pt 7 ps 0.5 \n" );
 	pclose(gplotpipe);
+
+
 }
 
 void saveS(arma::Mat<double> &S,int N, int n_stats_total)
@@ -1746,6 +1962,44 @@ void loadS(arma::Mat<double> &S,int N, int n_total)
     fclose(f);
 }
 
+int Ntotal(int n1,int n2,int k,int &N,double &K,int &N1,int &N2)
+{
+	int sum1=0;
+	int aux1=1;
+	int sum2=0;
+	int aux2=0;
+	for (int i = 1; i <= n1; ++i)
+	{
+		aux1=1;
+		for (int j = 0; j < i-1; ++j)
+		{
+			aux1=aux1*(k-1);
+		}
+		sum1=sum1+aux1;
+	}
+
+	for (int i = 1; i <= n2; ++i)
+	{
+		aux2=1;
+		for (int j = 0; j < i-1; ++j)
+		{
+			aux2=aux2*(k-1);
+		}
+		sum2=sum2+aux2;
+	}
+	N1=sum1;
+	N2=sum2;
+	printf("N1=%d\n",N1 );
+	printf("N2=%d\n",N2 );
+	printf("new_N=%d\n",N1+N2+1 );
+	K=(K/N)*(N1+N2+1);
+	printf("new_K=%lf\n",K );
+	N=sum1+sum2+1;
+	return N;
+}
+
+
+
 int main()
 {
     using namespace std;
@@ -1754,6 +2008,8 @@ int main()
     FILE *gplotpipe;
 
 //////////////////////////////////////////////////////////
+    
+
     int N;
     printf("N: ");
     std::cin >>N;
@@ -1778,23 +2034,70 @@ int main()
     printf("Start Point (cuda) [x:1]: ");
     std::cin >>StartPoint_c;
 
-    int caso;
-    printf("Generate Kdist? (0 NO:: 1 YES):  ");
-    std::cin >>caso;
+
 
     int arbol;
     printf("Arbol? (0 NO:: 1 YES):  ");
     std::cin >>arbol;
 
+	int perfectarbol=0;
+	int lenght1=1;
+	int N1;
+	int N2;
+	int lenght2=1;
+	int kdist_perfecttree;
+	int perfect_conections=0;
+
+
     int cnst_A=0;
     if(arbol==1)
     {
-    	printf("Const A? (0 NO:: 1 YES):  ");
+    	printf("Perfect Arbol? (0 NO:: 1 YES):  ");
+    	std::cin >>perfectarbol;
+
+    	if(perfectarbol==1)
+    	{
+    		arbol=2;
+    		printf("kdist_perfecttree:  ");
+    		std::cin >>kdist_perfecttree;
+    		printf("Barrer conexiones? (0 NO:: 1 YES):  ");
+    		std::cin >>perfect_conections;
+    		int Naux=N+1;
+    		while(Naux>N)
+    		{
+    			printf("lenght1:  ");
+    			std::cin >>lenght1;
+    			printf("lenght2:  ");
+    			std::cin >>lenght2;
+    			if(lenght1<=1 || lenght2<=1)
+    			{
+    				continue;
+    			}
+    			Naux=Ntotal(lenght1,lenght2,kdist_perfecttree,N,K,N1,N2);
+
+
+    		}
+    		if(perfect_conections==1)
+    		{
+    			perfect_conections=(lenght1)*(lenght2);
+    		}
+
+    	}
+    }
+    if(arbol!=2)
+    {
+    	printf("Const A? load A (0 NO:: 1 YES):  ");
     	std::cin >>cnst_A;
     }
 
     int casoP;
 
+    int caso=1;
+    if(perfectarbol==0)
+    {
+    	printf("Generate Kdist? (0 NO:: 1 YES):  ");
+    	std::cin >>caso;
+    }
 
 
     int loop;
@@ -1837,7 +2140,16 @@ int main()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    if(perfect_conections>0)
+    {
+    	place=0;
+    	loop=perfect_conections+1;
+    }
 
+    //printf("perfect_conections=%d,[1,2]=%d, [2,1]=%d\n",loop, firstoff_perfecttree(lenght1,1,kdist_perfecttree,2),firstoff_perfecttree(lenght1,2,kdist_perfecttree,1) );
+    FILE *h=fopen("Perf_tree_C.txt","w");
+    fprintf(h, "%d   %d   %d   %d   %d\n",lenght1,lenght2,N1,N2,kdist_perfecttree);
+    fclose(h);
     for (int i = place; i < loop; ++i)
     {
 		gplotpipe= popen("gnuplot -p", "w");
@@ -1848,7 +2160,7 @@ int main()
     	printf("loop (%d/%d)\n",i+1,loop );
     	if(cnst_A==0)
     	{
-    		getA_a(rng,N,caso,i,arbol);
+    		getA_a(rng,N,caso,i,arbol,lenght1,lenght2,kdist_perfecttree,N1,N2);
     	}
 
 		changeA_ca(N,K,kappa,Caps,i);
@@ -1864,8 +2176,8 @@ int main()
 		}
     	solve_b(N,T_t,caso2,rng,dt_b); //el 0 no carga condiciones iniciales
     	getT_c(N,T_t,StartPoint_c,rng,T,i);
-    	Tproperties(P,N,T,Caps);
-    	Sproperties(S,N,n_stats_total,Caps,T_t,dt_b,T);
+    	Tproperties(P,N,T,Caps,arbol,i,lenght2,lenght1,kdist_perfecttree);
+    	Sproperties(S,N,n_stats_total,Caps,T_t,dt_b,T,arbol,i,lenght2,lenght1,kdist_perfecttree,N1,N2);
     	printf("loop #%d\n",loop );
     	saveP(P,N,n_total,i+1,gplotpipe);
     	saveS(S,N,n_stats_total);
