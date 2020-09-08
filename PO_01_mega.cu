@@ -2052,6 +2052,8 @@ int main()
     printf("N: ");
     std::cin >>N;
 
+    int old_N=N;
+
     double T_t;
     printf("Total Time: ");
     std::cin >>T_t;
@@ -2285,7 +2287,7 @@ int main()
     			{
     				int current_capa2=i%(lenght2)+1;
 					int current_capa1=i/(lenght2)+1;
-    				fprintf(M, "%d   %d   %lf\n", current_capa1,current_capa2,K);
+    				fprintf(M, "%d   %d   %lf\n", current_capa1,current_capa2,K*(old_N)/(N1+N2+1));
     				return_barrer_K=1;
     				break;
     			}
