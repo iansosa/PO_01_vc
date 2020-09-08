@@ -718,7 +718,7 @@ void fillW_b(std::vector<double> &Fw,int N,boost::mt19937 &rng,int caso)
     }
 }
 
-void printsave_b(size_t steps, std::vector< state_type > &x_vec,std::vector<double> &times,int N) //1 tiempo. 2 posicion. 3 momento. 4 energia potencial. 5 energia cinetica. 6 energia. 7 energia Total
+void printsave_b(size_t steps, std::vector< state_type > &x_vec,std::vector<double> &times,int N,int &return_barrer_K,int barrer_K=0) //1 tiempo. 2 posicion. 3 momento. 4 energia potencial. 5 energia cinetica. 6 energia. 7 energia Total
 {
 
 	FILE *f=fopen("save.txt","a");
@@ -737,9 +737,14 @@ void printsave_b(size_t steps, std::vector< state_type > &x_vec,std::vector<doub
 		fprintf(f,"\n");
 	}	
 	fclose(f);
+	if(times[steps-1]>100 && (x_vec[steps-1][0]-x_vec[steps-1][2*(N-1)])<10)
+	{
+
+		return_barrer_K=0;
+	}
 }
 
-void itera_b(double t_in, double t_fn,double dt,arma::Mat<double> &A,std::vector<double> &I,std::vector<double> &G,std::vector<double> &F,std::vector<double> &Fw,int N,int load,boost::mt19937 &rng)
+void itera_b(double t_in, double t_fn,double dt,arma::Mat<double> &A,std::vector<double> &I,std::vector<double> &G,std::vector<double> &F,std::vector<double> &Fw,int N,int load,boost::mt19937 &rng,int &return_barrer_K,int barrer_K=0)
 {
     using namespace std;
     using namespace boost::numeric::odeint;
@@ -769,12 +774,12 @@ void itera_b(double t_in, double t_fn,double dt,arma::Mat<double> &A,std::vector
     omp_set_schedule( omp_sched_static , chunk_size );
     printf("solving..\n");
 	steps = integrate_adaptive(stepper, ho, x , t_in , t_fn , dt,push_back_state_and_time( x_vec , times )); //1 funcion. 2 condiciones iniciales. 3 tiempo inicial. 4 tiempo final. 5 dt inicial. 6 vector de posicion y tiempo
-	printsave_b(steps,x_vec,times,N);
+	printsave_b(steps,x_vec,times,N,return_barrer_K,barrer_K);
 	inicialcond_b(x,N,rng,3,x_vec,steps);
 }
 
 
-void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt,int arbol)
+void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt,int arbol,int &return_barrer_K,int barrer_K=0)
 {
     using namespace std;
     arma::Mat<double> A(N,N);
@@ -808,7 +813,7 @@ void solve_b(int N,double T_t,int load,boost::mt19937 &rng,double dt,int arbol)
 	{
 		printf("part (%d/%d)\n",i+1,number_of_partitions );
 		t_fn=t_in+(T_t/number_of_partitions);
-		itera_b(t_in,t_fn,dt,A,I,G,F,Fw,N,load,rng);
+		itera_b(t_in,t_fn,dt,A,I,G,F,Fw,N,load,rng,return_barrer_K,barrer_K);
 		t_in=t_fn;
 	}
 	printf("N (boost)=%d\n",N);
@@ -1881,7 +1886,7 @@ void Sproperties(arma::Mat<double> &S,int N,int n_stats_total,std::vector<int> &
 
 
 
-void saveP(arma::Mat<double> &P,int N, int n_total,int place, FILE *gplotpipe)
+void saveP(arma::Mat<double> &P,int N, int n_total,int place, FILE *gplotpipe,int arbol=0)
 {
     FILE *f=fopen("P.txt","w");
     for (int i = 0; i < N*N; ++i)
@@ -1918,9 +1923,12 @@ void saveP(arma::Mat<double> &P,int N, int n_total,int place, FILE *gplotpipe)
 	FILE *fp=fopen("save_place.txt","w");
 	fprintf(fp, "%d\n",place);
 	fclose(fp);
-	fprintf(gplotpipe, "splot 'P.txt' u 1:(log($12)):15 w p palette pt 7 ps 0.5 \n" );
-	pclose(gplotpipe);
-
+	
+	if(arbol==0)
+	{
+		fprintf(gplotpipe, "splot 'P.txt' u 1:(log($12)):15 w p palette pt 7 ps 0.5 \n" );
+		pclose(gplotpipe);
+	}
 
 }
 
@@ -1986,7 +1994,7 @@ void loadS(arma::Mat<double> &S,int N, int n_total)
     fclose(f);
 }
 
-int Ntotal(int n1,int n2,int k,int &N,double &K,int &N1,int &N2)
+int Ntotal(int n1,int n2,int k,int &N,double &K,int &N1,int &N2,double &K_start,double &K_end,double &K_dk)
 {
 	int sum1=0;
 	int aux1=1;
@@ -2017,7 +2025,13 @@ int Ntotal(int n1,int n2,int k,int &N,double &K,int &N1,int &N2)
 	printf("N2=%d\n",N2 );
 	printf("new_N=%d\n",N1+N2+1 );
 	K=(K/N)*(N1+N2+1);
+	K_start=K_start*(N1+N2+1)/(N);
+	K_end=K_end*(N1+N2+1)/(N);
+	K_dk=K_dk*(N1+N2+1)/(N);
 	printf("new_K=%lf\n",K );
+	printf("new_K_start=%lf\n",K_start );
+	printf("new_K_end=%lf\n",K_end );
+	printf("new_K_dk=%lf\n",K_dk );
 	N=sum1+sum2+1;
 	return N;
 }
@@ -2071,6 +2085,10 @@ int main()
 	int lenght2=1;
 	int kdist_perfecttree;
 	int perfect_conections=0;
+	int barrer_K=0;
+	double K_start=1;
+	double K_end=1;
+	double K_dk=1;
 
 
     int cnst_A=0;
@@ -2086,6 +2104,16 @@ int main()
     		std::cin >>kdist_perfecttree;
     		printf("Barrer conexiones? (0 NO:: 1 YES):  ");
     		std::cin >>perfect_conections;
+    		printf("Barrer K? (0 NO:: 1 YES):  ");
+    		std::cin >>barrer_K;
+    		if(barrer_K==1)
+    		{
+    			printf("K[x,x]    ");
+    			std::cin >>K_start;
+    			std::cin >>K_end;
+    			printf("dk (0.05)    ");
+    			std::cin >>K_dk;
+    		}
     		int Naux=N+1;
     		while(Naux>N)
     		{
@@ -2097,7 +2125,7 @@ int main()
     			{
     				continue;
     			}
-    			Naux=Ntotal(lenght1,lenght2,kdist_perfecttree,N,K,N1,N2);
+    			Naux=Ntotal(lenght1,lenght2,kdist_perfecttree,N,K,N1,N2,K_start,K_end,K_dk);
 
 
     		}
@@ -2169,8 +2197,12 @@ int main()
     	place=0;
     	loop=perfect_conections+1;
     }
+    if(barrer_K==1)
+    {
+    	place=loop;
+    }
+    int return_barrer_K=1;
 
-    //printf("perfect_conections=%d,[1,2]=%d, [2,1]=%d\n",loop, firstoff_perfecttree(lenght1,1,kdist_perfecttree,2),firstoff_perfecttree(lenght1,2,kdist_perfecttree,1) );
     FILE *h=fopen("Perf_tree_C.txt","w");
     fprintf(h, "%d   %d   %d   %d   %d\n",lenght1,lenght2,N1,N2,kdist_perfecttree);
     fclose(h);
@@ -2198,13 +2230,66 @@ int main()
 		{
 			caso2=1;
 		}
-    	solve_b(N,T_t,caso2,rng,dt_b,arbol); //el 0 no carga condiciones iniciales
+    	solve_b(N,T_t,caso2,rng,dt_b,arbol,return_barrer_K); //el 0 no carga condiciones iniciales
     	getT_c(N,T_t,StartPoint_c,rng,T,i);
     	Tproperties(P,N,T,Caps,arbol,i,lenght2,lenght1,kdist_perfecttree);
     	Sproperties(S,N,n_stats_total,Caps,T_t,dt_b,T,arbol,i,lenght2,lenght1,kdist_perfecttree,N1,N2);
     	printf("loop #%d\n",loop );
     	saveP(P,N,n_total,i+1,gplotpipe);
     	saveS(S,N,n_stats_total);
+    }
+
+    if(perfect_conections>0)
+    {
+    	place=0;
+    	loop=perfect_conections;
+    }
+    if(barrer_K==1)
+    {
+    	FILE *M=fopen("Perf_tree_K.txt","w");
+    	for (int i = place; i < loop; ++i)
+    	{
+			gplotpipe= popen("gnuplot -p", "w");
+    		printf("loop (%d/%d)\n",i+1,loop );
+    		return_barrer_K=1;
+    		for (int j = 0; j < int ((K_end-K_start)/K_dk); ++j)
+    		{
+    			printf("loop C(%d/%d)\n K(%d/%d)\n",i+1,loop,j+1,int ((K_end-K_start)/K_dk) );
+    			K=K_start+j*K_dk;
+    			if(cnst_A==0)
+    			{
+    				getA_a(rng,N,caso,i,arbol,lenght1,lenght2,kdist_perfecttree,N1,N2);
+    			}
+	
+				changeA_ca(N,K,kappa,Caps,i);
+	
+				int caso2;
+				if(caso==1)
+				{
+					caso2=0;
+				}
+				else
+				{
+					caso2=1;
+				}
+    			solve_b(N,T_t,caso2,rng,dt_b,arbol,return_barrer_K,barrer_K); //el 0 no carga condiciones iniciales
+    			getT_c(N,T_t,StartPoint_c,rng,T,i);
+   	 			Tproperties(P,N,T,Caps,arbol,i,lenght2,lenght1,kdist_perfecttree);
+    			Sproperties(S,N,n_stats_total,Caps,T_t,dt_b,T,arbol,i,lenght2,lenght1,kdist_perfecttree,N1,N2);
+    			printf("loop #%d\n",loop );
+    			saveP(P,N,n_total,i+1,gplotpipe,arbol);
+    			saveS(S,N,n_stats_total);
+    			if(return_barrer_K==0)
+    			{
+    				int current_capa2=i%(lenght2)+1;
+					int current_capa1=i/(lenght2)+1;
+    				fprintf(M, "%d   %d   %lf\n", current_capa1,current_capa2,K);
+    				return_barrer_K=1;
+    				break;
+    			}
+    		}
+    	}
+    	fclose(M);
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
