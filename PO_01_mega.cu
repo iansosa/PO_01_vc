@@ -2247,11 +2247,13 @@ int main()
     if(barrer_K==1)
     {
     	FILE *M=fopen("Perf_tree_K.txt","w");
+    	fclose(M);
     	for (int i = place; i < loop; ++i)
     	{
 			gplotpipe= popen("gnuplot -p", "w");
     		printf("loop (%d/%d)\n",i+1,loop );
     		return_barrer_K=1;
+    		M=fopen("Perf_tree_K.txt","a");
     		for (int j = 0; j < int ((K_end-K_start)/K_dk); ++j)
     		{
     			printf("loop C(%d/%d)\n K(%d/%d)\n",i+1,loop,j+1,int ((K_end-K_start)/K_dk) );
@@ -2288,8 +2290,9 @@ int main()
     				break;
     			}
     		}
+    		fclose(M);
     	}
-    	fclose(M);
+    	
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
