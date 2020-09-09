@@ -2088,6 +2088,7 @@ int main()
 	int kdist_perfecttree;
 	int perfect_conections=0;
 	int barrer_K=0;
+	int barrer_C_load=0;
 	double K_start=1;
 	double K_end=1;
 	double K_dk=1;
@@ -2106,6 +2107,12 @@ int main()
     		std::cin >>kdist_perfecttree;
     		printf("Barrer conexiones? (0 NO:: 1 YES):  ");
     		std::cin >>perfect_conections;
+    		if(perfect_conections==1)
+    		{
+    			printf("Barrer C? load= (0 NO:: load_value YES):  ");
+    			std::cin >>barrer_C_load;
+    		}
+
     		printf("Barrer K? (0 NO:: 1 YES):  ");
     		std::cin >>barrer_K;
     		if(barrer_K==1)
@@ -2245,10 +2252,23 @@ int main()
     {
     	place=0;
     	loop=perfect_conections;
+    	if(barrer_C_load>0)
+    	{
+    		place=barrer_C_load;
+    	}
     }
     if(barrer_K==1)
     {
-    	FILE *M=fopen("Perf_tree_K.txt","w");
+    	FILE *M;
+    	if(barrer_C_load>0)
+    	{
+    		M=fopen("Perf_tree_K.txt","a");
+    	}
+    	else
+    	{
+    		M=fopen("Perf_tree_K.txt","w");
+    	}
+    	
     	fclose(M);
     	for (int i = place; i < loop; ++i)
     	{
